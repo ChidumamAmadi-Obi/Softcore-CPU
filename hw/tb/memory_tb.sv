@@ -13,8 +13,9 @@ logic [7:0]  data_out;
 logic        valid;
 
 // test signals
-logic [15:0] start_address;
-logic [7:0] expected_data, actual_data;
+logic [15:0] test_address;
+logic [7:0] written_data, read_data;
+int rw_errors, loading_errors;
 
 memory memory_dut (
     .sys_clk_i(clk),
@@ -37,16 +38,18 @@ endtask
 task readRam;
 input logic [7:0] bank;
 input logic [7:0] addr;
-//output logic [7:0] data;
+output logic [7:0] data;
     @(negedge clk);
     address = {bank,addr};
     we      = 1'b0;
     cen     = 1'b0;
 
     @(posedge clk);   // mem registers the read here
-    #1;               
+    #1;          
 
-    $display("READ: 0x%02h, BANK: %d, ADDR: 0x%02h", data_out, bank, addr);
+    data = data_out;     
+
+    //$display("READ: 0x%02h, BANK: %d, ADDR: 0x%02h", data_out, bank, addr);
 endtask
 
 task writeRam;
@@ -63,15 +66,46 @@ input logic [7:0] data;
     @(posedge clk);
     #1;               
 
-    $display("WROTE: 0x%02h, BANK: %d, ADDR: 0x%02h", data, bank, addr);
+    //$display("WROTE: 0x%02h, BANK: %d, ADDR: 0x%02h", data, bank, addr);
 endtask
 
 always #1 clk = ~clk;
 initial begin 
     init;
-    readRam(8'h00,8'h00); // read from bank 0 addr 0
-    writeRam(8'h00,8'h00,8'hAB);
-    readRam(8'h00,8'h00);
+
+    written_data = 8'h00;
+    read_data = 8'h00;
+    rw_errors = 0;
+
+    // verify program loading into BRAM works
+
+    // test reading and writing to each bank
+    for (test_address = 16'h0000; test_address < 16'h03FF; test_address++) begin 
+        written_data = test_address[7:0];
+        writeRam(
+            test_address[15:8],
+            test_address[7:0],
+            test_address[7:0]);
+        readRam(
+            test_address[15:8],
+            test_address[7:0],
+            read_data);
+        
+        if (written_data != read_data) begin 
+            $display("!!! READBACK ERROR, EXPECTED: 0x%02h READ: 0x%02h ADDR: 0x%04h at %f",
+                written_data,
+                read_data,
+                test_address,
+                $realtime);
+            rw_errors++;
+        end 
+    end
+
+    if (rw_errors) begin 
+        $display("EXITED WITH %d READ/WRITE ERROR(S)", rw_errors);
+    end else begin 
+        $display("EXITED WITH NO rw_ERRORS");
+    end
     $finish;
 end
 endmodule
