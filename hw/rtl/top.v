@@ -1,14 +1,16 @@
 
 module top (
-    input wire sys_clk,
-    input wire sys_rstn,    
+    input wire sys_clk_i,
+    input wire sys_rstn_i
 );
 
-memory memory_ (
+memory memory_i (
     .sys_clk_i(sys_clk_i),
     .sys_rstn_i(sys_rstn_i),
     .address_i(),
     .we_i(),
     .data_i(),
-    .data_o());
+    .data_o(),
+    .valid_o()
+);
 endmodule
