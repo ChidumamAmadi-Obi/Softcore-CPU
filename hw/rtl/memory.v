@@ -27,10 +27,7 @@ initial begin
 end
 
 always @(posedge sys_clk_i) begin 
-    if (!sys_rstn_i) begin 
-        valid       <= 1'h0;
-        data_out    <= 8'h00;
-    end else if (cen_i) begin // if chip disabled 
+    if (!sys_rstn_i || cen_i) begin 
         valid       <= 1'h0;
         data_out    <= 8'h00;
     end else begin 
