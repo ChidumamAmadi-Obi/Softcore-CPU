@@ -60,7 +60,7 @@ run-tb-mem:
 	verilator --binary --trace -I$(RTL_DIR) -I$(TB_DIR) $(TB_DISABLE_WARNING) $(RTL_DIR)/$(MEM_RTL_SRC).v $(TB_DIR)/$(MEM_TB_SRC).sv --top memory_tb
 	$(MEM_TB_EXEC) | tee $(TB_LOG_FILE)
 run-tb-alu:
-	verilator --binary --trace -I$(RTL_DIR) -I$(TB_DIR) $(TB_DISABLE_WARNING) $(RTL_DIR)/$(ALU_RTL_SRC).v $(TB_DIR)/$(ALU_TB_SRC).sv --top ALU_tb
+	verilator --binary --trace -I$(RTL_DIR) -I$(TB_DIR) $(TB_DISABLE_WARNING) $(RTL_DIR)/$(ALU_RTL_SRC).v $(TB_DIR)/$(ALU_TB_SRC).sv --top alu_tb
 	$(ALU_TB_EXEC) | tee $(TB_LOG_FILE)	
 
 clean: # remove generated stuff

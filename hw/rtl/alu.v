@@ -90,9 +90,3 @@ end
 assign alu_flags_o = {error_flag, zero_flag, ovf_flag, crry_flag};
 assign result_o    = full_result[7:0];
 endmodule
-
-/*
- 10
- 10
-100
-*/

@@ -35,4 +35,5 @@ parameter logic [7:0] OP_ORI    = 8'h16;
 parameter logic [7:0] OP_XORI   = 8'h17;
 parameter logic [7:0] OP_EQUI   = 8'h18;
 parameter logic [7:0] OP_DIVI   = 8'h19;
+
 `endif
