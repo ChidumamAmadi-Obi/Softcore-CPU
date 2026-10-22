@@ -9,7 +9,7 @@ logic [7:0] opcode = 8'h00;
 logic [7:0] operand_a = 8'h00;
 logic [7:0] operand_b = 8'h00;
 logic [7:0] result;
-logic [3:0] flags;
+logic [2:0] flags;
 logic valid;
 
 alu alu_dut(
@@ -43,19 +43,19 @@ input logic [7:0] b;
         operand_a=a;
         operand_b=b;
 
-    repeat (2) @(posedge clk); // wait 2 clk cycles
+    repeat (2) @(posedge clk); // wait 3 clk cycles
     #(1);
     // takes one clk cycle to output result
 
     $display("RESULTS 0x%04h, 0x%02h", alu_dut.full_result, result);
-    $display("       e z o c");
-    $display("FLAGS: %b %b %b %b", flags[0], flags[1], flags[2], flags[3]);
+    $display("       z o c");
+    $display("FLAGS: %b %b %b", flags[2], flags[1], flags[0]);
 endtask
 
 always #1 clk = ~clk;
 initial begin 
     init;
-    testAlu(OP_ADD, 8'h80, 8'h70);
+    testAlu(OP_SUB, 8'hFE, 8'hFF);
     #(10);
     $finish;
 end
