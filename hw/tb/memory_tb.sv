@@ -14,7 +14,7 @@ logic        valid;
 
 // test signals
 logic [15:0] test_address;
-logic [7:0] written_data, read_data;
+logic [7:0] written_data, expected_data, read_data;
 int rw_errors, loading_errors;
 
 logic [7:0] test_ram_0 [255:0];
@@ -79,8 +79,10 @@ initial begin
     init;
 
     written_data = 8'h00;
+    expected_data = 8'h00;
     read_data = 8'h00;
     rw_errors = 0;
+    loading_errors = 0;
 
     // verify program loading into BRAM works
     $readmemh(`RAM_0_FILE_PATH, test_ram_0);
@@ -88,8 +90,32 @@ initial begin
     $readmemh(`RAM_2_FILE_PATH, test_ram_2);
     $readmemh(`RAM_3_FILE_PATH, test_ram_3);
 
+    for (test_address = 16'h0000; test_address < MAX_ADDR; test_address++) begin 
+        case (test_address[15:8])
+            8'h00: expected_data = test_ram_0[test_address[7:0]];
+            8'h01: expected_data = test_ram_1[test_address[7:0]];
+            8'h02: expected_data = test_ram_2[test_address[7:0]];
+            8'h03: expected_data = test_ram_3[test_address[7:0]];
+            default:;
+        endcase
+
+        readRam(
+            test_address[15:8],
+            test_address[7:0],
+            read_data);
+
+        if (expected_data !== read_data) begin 
+            $display("!!! PROGRAM LOADING ERROR, EXPECTED: 0x%02h READ: 0x%02h ADDR: 0x%04h at %f",
+                expected_data,
+                read_data,
+                test_address,
+                $realtime);
+            loading_errors++;
+        end 
+    end
+
     // test reading and writing to each bank
-    for (test_address = 16'h0000; test_address < 16'h03FF; test_address++) begin 
+    for (test_address = 16'h0000; test_address < MAX_ADDR; test_address++) begin 
         written_data = test_address[7:0];
         writeRam(
             test_address[15:8],
@@ -100,7 +126,7 @@ initial begin
             test_address[7:0],
             read_data);
         
-        if (written_data != read_data) begin 
+        if (written_data !== read_data) begin 
             $display("!!! READBACK ERROR, EXPECTED: 0x%02h READ: 0x%02h ADDR: 0x%04h at %f",
                 written_data,
                 read_data,
@@ -114,6 +140,11 @@ initial begin
         $display("EXITED WITH %d READ/WRITE ERROR(S)", rw_errors);
     end else begin 
         $display("EXITED WITH NO READ/WRITE ERRORS");
+    end
+    if (loading_errors) begin 
+        $display("EXITED WITH %d LOADING ERROR(S)", loading_errors);
+    end else begin 
+        $display("EXITED WITH NO LOADING ERRORS");
     end
     $finish;
 end

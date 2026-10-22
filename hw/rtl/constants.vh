@@ -16,4 +16,6 @@
     `define RAM_3_FILE_PATH "bin/ram_3.hex"
 `endif 
 
+parameter logic [15:0] MAX_ADDR = 16'h0400;
+
 `endif
