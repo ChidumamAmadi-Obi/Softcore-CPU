@@ -16,6 +16,11 @@
     `define RAM_3_FILE_PATH "hex/ram_3.hex"
 `endif 
 
+`define ADDR_LEN 16 // bit length of address
+`define DATA_LEN 8  
+`define GP_REGS  16 // no of general purpose registers
+`define INST_LEN 32
+
 parameter logic [15:0] MAX_ADDR = 16'h0400;
 
 // ISA

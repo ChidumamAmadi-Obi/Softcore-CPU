@@ -9,7 +9,7 @@ module alu(
     input wire [7:0] operand_b_i,
 
     output wire [7:0] result_o,
-    output wire [2:0] alu_flags_o,
+    output wire [3:0] alu_flags_o,
     output wire valid_o); // output all alu flags
 
 reg [15:0] full_result;
