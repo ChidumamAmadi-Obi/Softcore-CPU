@@ -46,9 +46,9 @@ always @(posedge sys_clk_i) begin
         end else begin // read
             case (address_i[15:8])
                 8'h00: begin data_out <= ram_0[address_i[7:0]]; valid <= 1'b1; end
-                8'h01: begin data_out <= ram_0[address_i[7:0]]; valid <= 1'b1; end
-                8'h02: begin data_out <= ram_0[address_i[7:0]]; valid <= 1'b1; end
-                8'h03: begin data_out <= ram_0[address_i[7:0]]; valid <= 1'b1; end
+                8'h01: begin data_out <= ram_1[address_i[7:0]]; valid <= 1'b1; end
+                8'h02: begin data_out <= ram_2[address_i[7:0]]; valid <= 1'b1; end
+                8'h03: begin data_out <= ram_3[address_i[7:0]]; valid <= 1'b1; end
                 default: begin data_out <= 8'h00; valid <= 1'b0; end
             endcase
         end        
