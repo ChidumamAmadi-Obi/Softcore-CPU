@@ -1,6 +1,6 @@
-module memory_tb;
+`include "constants.vh"
 
-`timescale 1ns/1ps
+module memory_tb;
 
 // i/o signals
 logic        clk = 0;
@@ -16,6 +16,11 @@ logic        valid;
 logic [15:0] test_address;
 logic [7:0] written_data, read_data;
 int rw_errors, loading_errors;
+
+logic [7:0] test_ram_0 [255:0];
+logic [7:0] test_ram_1 [255:0];
+logic [7:0] test_ram_2 [255:0];
+logic [7:0] test_ram_3 [255:0];
 
 memory memory_dut (
     .sys_clk_i(clk),
@@ -78,6 +83,10 @@ initial begin
     rw_errors = 0;
 
     // verify program loading into BRAM works
+    $readmemh(`RAM_0_FILE_PATH, test_ram_0);
+    $readmemh(`RAM_1_FILE_PATH, test_ram_1);
+    $readmemh(`RAM_2_FILE_PATH, test_ram_2);
+    $readmemh(`RAM_3_FILE_PATH, test_ram_3);
 
     // test reading and writing to each bank
     for (test_address = 16'h0000; test_address < 16'h03FF; test_address++) begin 
@@ -104,7 +113,7 @@ initial begin
     if (rw_errors) begin 
         $display("EXITED WITH %d READ/WRITE ERROR(S)", rw_errors);
     end else begin 
-        $display("EXITED WITH NO rw_ERRORS");
+        $display("EXITED WITH NO READ/WRITE ERRORS");
     end
     $finish;
 end

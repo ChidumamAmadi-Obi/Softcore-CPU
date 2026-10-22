@@ -1,4 +1,5 @@
-`timescale 1ns/1ps
+`include "constants.vh"
+
 module top (
     input wire sys_clk_i,
     input wire sys_rstn_i
