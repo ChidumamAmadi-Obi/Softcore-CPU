@@ -1,3 +1,5 @@
+`include "constants.vh"
+
 module top_tb;
 
 logic clk, rstn;
