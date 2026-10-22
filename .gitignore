@@ -1,0 +1,7 @@
+.vscode/
+obj_dir/
+*.vvp
+*.fs
+*.json
+*.txt
+NOTES.md
