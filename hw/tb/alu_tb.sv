@@ -43,7 +43,7 @@ input logic [7:0] b;
         operand_a=a;
         operand_b=b;
 
-    repeat (2) @(posedge clk); // wait 3 clk cycles
+    repeat (2) @(posedge clk); // wait 2 clk cycles
     #(1);
     // takes one clk cycle to output result
 
@@ -60,9 +60,3 @@ initial begin
     $finish;
 end
 endmodule
-
-/*
-0 1000 0000
-0 0111 0000
-0 1111 0000
-*/
