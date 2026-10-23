@@ -90,7 +90,7 @@ initial begin
     $readmemh(`RAM_2_FILE_PATH, test_ram_2);
     $readmemh(`RAM_3_FILE_PATH, test_ram_3);
 
-    for (test_address = 16'h0000; test_address < MAX_ADDR; test_address++) begin 
+    for (test_address = 16'h0000; test_address < MAX_ADDR_MEm; test_address++) begin 
         case (test_address[15:8])
             8'h00: expected_data = test_ram_0[test_address[7:0]];
             8'h01: expected_data = test_ram_1[test_address[7:0]];
@@ -115,7 +115,7 @@ initial begin
     end
 
     // test reading and writing to each bank
-    for (test_address = 16'h0000; test_address < MAX_ADDR; test_address++) begin 
+    for (test_address = 16'h0000; test_address < MAX_ADDR_MEM; test_address++) begin 
         written_data = test_address[7:0];
         writeRam(
             test_address[15:8],
