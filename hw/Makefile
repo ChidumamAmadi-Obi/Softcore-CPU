@@ -56,30 +56,32 @@ help: # shows message
 	@echo  - clean
 	@echo  - help
 
+-h:
+	make help
+
 # lint rtl modules
 lint-rtl:
-	verilator --lint-only -I$(RTL_DIR) $(RTL_DISABLE_WARNING) $(RTL_DIR)/$(TOP_RTL_SRC).v --top top
-lint-rtl-mem:
-	verilator --lint-only -I$(RTL_DIR) $(RTL_DISABLE_WARNING) $(RTL_DIR)/$(MEM_RTL_SRC).v --top memory
-lint-rtl-alu:
-	verilator --lint-only -I$(RTL_DIR) $(RTL_DISABLE_WARNING) $(RTL_DIR)/$(ALU_RTL_SRC).v --top alu
-
-lint-rtl-cu:
-	verilator --lint-only -I$(RTL_DIR) $(RTL_DISABLE_WARNING) $(RTL_DIR)/$(CU_RTL_SRC).v --top control_unit
+	verilator --lint-only -I$(RTL_DIR) $(RTL_DISABLE_WARNING) $(RTL_DIR)/$(TOP_RTL_SRC).sv --top top
 lint-rtl-cpu:
-	verilator --lint-only -I$(RTL_DIR) $(RTL_DISABLE_WARNING) $(RTL_DIR)/$(CPU_RTL_SRC).v --top cpu
+	verilator --lint-only -I$(RTL_DIR) $(RTL_DISABLE_WARNING) $(RTL_DIR)/$(CPU_RTL_SRC).sv --top cpu
+lint-rtl-mem:
+	verilator --lint-only -I$(RTL_DIR) $(RTL_DISABLE_WARNING) $(RTL_DIR)/$(MEM_RTL_SRC).sv --top memory
+lint-rtl-alu:
+	verilator --lint-only -I$(RTL_DIR) $(RTL_DISABLE_WARNING) $(RTL_DIR)/$(ALU_RTL_SRC).sv --top alu
+lint-rtl-cu:
+	verilator --lint-only -I$(RTL_DIR) $(RTL_DISABLE_WARNING) $(RTL_DIR)/$(CU_RTL_SRC).sv --top control_unit
 lint-rtl-pph:
-	verilator --lint-only -I$(RTL_DIR) $(RTL_DISABLE_WARNING) $(RTL_DIR)/$(PPH_RTL_SRC).v --top periphs
+	verilator --lint-only -I$(RTL_DIR) $(RTL_DISABLE_WARNING) $(RTL_DIR)/$(PPH_RTL_SRC).sv --top periphs
 
 # run tbs
 run-tb:
-	verilator --binary --trace -I$(RTL_DIR) -I$(TB_DIR) $(TB_DISABLE_WARNING) $(RTL_DIR)/$(TOP_RTL_SRC).v $(TB_DIR)/$(TOP_TB_SRC).sv --top top_tb
+	verilator --binary --trace -I$(RTL_DIR) -I$(TB_DIR) $(TB_DISABLE_WARNING) $(RTL_DIR)/$(TOP_RTL_SRC).sv $(TB_DIR)/$(TOP_TB_SRC).sv --top top_tb
 	$(TOP_TB_EXEC) | tee $(TB_LOG_FILE)
 run-tb-mem:
-	verilator --binary --trace -I$(RTL_DIR) -I$(TB_DIR) $(TB_DISABLE_WARNING) $(RTL_DIR)/$(MEM_RTL_SRC).v $(TB_DIR)/$(MEM_TB_SRC).sv --top memory_tb
+	verilator --binary --trace -I$(RTL_DIR) -I$(TB_DIR) $(TB_DISABLE_WARNING) $(RTL_DIR)/$(MEM_RTL_SRC).sv $(TB_DIR)/$(MEM_TB_SRC).sv --top memory_tb
 	$(MEM_TB_EXEC) | tee $(TB_LOG_FILE)
 run-tb-alu:
-	verilator --binary --trace -I$(RTL_DIR) -I$(TB_DIR) $(TB_DISABLE_WARNING) $(RTL_DIR)/$(ALU_RTL_SRC).v $(TB_DIR)/$(ALU_TB_SRC).sv --top alu_tb
+	verilator --binary --trace -I$(RTL_DIR) -I$(TB_DIR) $(TB_DISABLE_WARNING) $(RTL_DIR)/$(ALU_RTL_SRC).sv $(TB_DIR)/$(ALU_TB_SRC).sv --top alu_tb
 	$(ALU_TB_EXEC) | tee $(TB_LOG_FILE)	
 
 clean: # remove generated stuff

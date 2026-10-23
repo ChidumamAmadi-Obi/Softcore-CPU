@@ -1,4 +1,4 @@
-`include "constants.vh"
+`include "constants.svh"
 
 module control_unit(
     input wire sys_clk_i,

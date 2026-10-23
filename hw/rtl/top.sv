@@ -1,4 +1,4 @@
-`include "constants.vh"
+`include "constants.svh"
 
 module top (
     input wire sys_clk_i,

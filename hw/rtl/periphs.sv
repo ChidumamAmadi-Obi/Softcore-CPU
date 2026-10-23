@@ -1,4 +1,4 @@
-`include "constants.vh"
+`include "constants.svh"
 
 module periphs(
     input wire sys_clk_i,
@@ -19,8 +19,8 @@ module periphs(
 
     always @(posedge sys_clk_i) begin 
         if (!sys_rstn_i) begin 
-            led_array = 6'h00;
-            output_port = 16'h0000;      
+            led_array <= 6'h00;
+            output_port <= 16'h0000;      
         end else if (periph_wen) begin 
             case(periph_address)
                 `LED_ARRAY:  led_array <= ~data_i[5:0];

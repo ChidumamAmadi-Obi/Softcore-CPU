@@ -1,0 +1,4 @@
+IO_LOC  "sys_rstn_i" 3;
+IO_PORT "sys_rstn_i" PULL_MODE=UP;
+IO_LOC  "sys_clk_i" 52;
+IO_PORT "sys_clk_i" PULL_MODE=UP;
