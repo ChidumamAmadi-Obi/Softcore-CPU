@@ -22,6 +22,11 @@
 `define GP_REGS  16 // no of general purpose registers
 `define INST_LEN 32
 
+// addresses for memory mapped peripherals
+`define LED_ARRAY  16'h0400
+`define OUT_PORT_0 16'h0401
+`define OUT_PORT_1 16'h0402
+
 parameter logic [15:0] MAX_ADDR_MEM = 16'h0400;
 
 // ISA
