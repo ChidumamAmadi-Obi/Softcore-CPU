@@ -22,42 +22,46 @@
 `define GP_REGS  16 // no of general purpose registers
 `define INST_LEN 32
 
-// addresses for memory mapped peripherals
-`define LED_ARRAY  16'h0400
-`define OUT_PORT_0 16'h0401
-`define OUT_PORT_1 16'h0402
-
 parameter MAX_ADDR_MEM = 16'h0400;
 
+// addresses for memory mapped peripherals
+typedef enum logic [15:0] { 
+    LED_ARRAY  = 16'h0400,
+    OUT_PORT_0 = 16'h0401,
+    OUT_PORT_1 = 16'h0402
+} Peripheral_address;
+
 // ISA
-parameter OP_HALT    = 8'h00;
-parameter OP_STR     = 8'h01;
-parameter OP_LD      = 8'h02;
-parameter OP_JMP     = 8'h03;
-parameter OP_MOV     = 8'h04;
-parameter OP_JMP_OFW    = 8'h05;
-parameter OP_JMP_ZRO    = 8'h06;
-parameter OP_JMP_NEG    = 8'h07;
-parameter OP_JMP_ABV    = 8'h08;
-parameter OP_ADD    = 8'h09;
-parameter OP_SUB    = 8'h0A;
-parameter OP_MUL    = 8'h0B;
-parameter OP_AND    = 8'h0C;
-parameter OP_OR     = 8'h0D;
-parameter OP_XOR    = 8'h0E;
-parameter OP_EQU    = 8'h0F;
-parameter OP_DIV    = 8'h10;
-parameter OP_LDI    = 8'h11;
-parameter OP_ADDI   = 8'h12;
-parameter OP_SUBI   = 8'h13;
-parameter OP_MULI   = 8'h14;
-parameter OP_ANDI   = 8'h15;
-parameter OP_ORI    = 8'h16;
-parameter OP_XORI   = 8'h17;
-parameter OP_EQUI   = 8'h18;
-parameter OP_DIVI   = 8'h19;
-parameter OP_CALL   = 8'h1A;
-parameter OP_RET    = 8'h1B;
-parameter OP_NOP    = 8'h1C;
+typedef enum logic [7:0] { 
+    OP_HALT,
+    OP_STR,
+    OP_LD,
+    OP_JMP,
+    OP_MOV,
+    OP_JMP_OFW,
+    OP_JMP_ZRO,
+    OP_JMP_NEG,
+    OP_JMP_ABV,
+    OP_ADD,
+    OP_SUB,
+    OP_MUL,
+    OP_AND,
+    OP_OR,
+    OP_XOR,
+    OP_EQU,
+    OP_DIV,
+    OP_LDI,
+    OP_ADDI,
+    OP_SUBI,
+    OP_MULI,
+    OP_ANDI,
+    OP_ORI,
+    OP_XORI,
+    OP_EQUI,
+    OP_DIVI,
+    OP_CALL,
+    OP_RET,
+    OP_NOP
+} Opcodes;
 
 `endif

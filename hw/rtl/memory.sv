@@ -1,23 +1,23 @@
 `include "constants.svh"
 
 module memory (
-    input wire sys_clk_i,
-    input wire sys_rstn_i,
-    input wire [15:0] address_i,
-    input wire we_i, // write enable 
-    input wire cen_i, // chip en (active low)
-    input wire [7:0] data_i,
-    output wire [7:0] data_o,
-    output wire valid_o
+    input logic sys_clk_i,
+    input logic sys_rstn_i,
+    input logic [15:0] address_i,
+    input logic we_i, // write enable 
+    input logic cen_i, // chip en (active low)
+    input logic [7:0] data_i,
+    output logic [7:0] data_o,
+    output logic valid_o
     );
 
-reg [7:0] ram_0 [255:0];
-reg [7:0] ram_1 [255:0];
-reg [7:0] ram_2 [255:0];
-reg [7:0] ram_3 [255:0];
+logic [7:0] ram_0 [255:0];
+logic [7:0] ram_1 [255:0];
+logic [7:0] ram_2 [255:0];
+logic [7:0] ram_3 [255:0];
 
-reg [7:0] data_out;
-reg valid;
+logic [7:0] data_out;
+logic valid;
 
 initial begin 
     $readmemh(`RAM_0_FILE_PATH,ram_0);

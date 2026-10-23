@@ -1,27 +1,27 @@
 `include "constants.svh"
 
 module alu(
-    input wire sys_clk_i,
-    input wire sys_rstn_i,
-    input wire cen_i,
-    input wire [7:0] opcode_i,
-    input wire [7:0] operand_a_i,
-    input wire [7:0] operand_b_i,
+    input logic sys_clk_i,
+    input logic sys_rstn_i,
+    input logic cen_i,
+    input logic [7:0] opcode_i,
+    input logic [7:0] operand_a_i,
+    input logic [7:0] operand_b_i,
 
-    output wire [7:0] result_o,
-    output wire [3:0] alu_flags_o,
-    output wire valid_o); // output all alu flags
+    output logic [7:0] result_o,
+    output logic [3:0] alu_flags_o,
+    output logic valid_o); // output all alu flags
 
-reg [15:0] full_result;
-reg [7:0] a, b;
-reg valid;
-wire z_flag, o_flag, c_flag, n_flag;
+logic [15:0] full_result;
+logic [7:0] a, b;
+logic valid;
+logic z_flag, o_flag, c_flag, n_flag;
 
-wire is_add  = (opcode_i == OP_ADD) || (opcode_i == OP_ADDI);
-wire is_sub  = (opcode_i == OP_SUB) || (opcode_i == OP_SUBI);
-wire is_mul  = (opcode_i == OP_MUL) || (opcode_i == OP_MULI);
-wire is_div  = (opcode_i == OP_DIV) || (opcode_i == OP_DIVI);
-wire is_ari  = (is_add || is_sub || is_mul || is_div);
+logic is_add  = (opcode_i == OP_ADD) || (opcode_i == OP_ADDI);
+logic is_sub  = (opcode_i == OP_SUB) || (opcode_i == OP_SUBI);
+logic is_mul  = (opcode_i == OP_MUL) || (opcode_i == OP_MULI);
+logic is_div  = (opcode_i == OP_DIV) || (opcode_i == OP_DIVI);
+logic is_ari  = (is_add || is_sub || is_mul || is_div);
 
 always @(posedge sys_clk_i) begin 
     if (!sys_rstn_i || cen_i) begin 
@@ -60,4 +60,5 @@ assign n_flag   = is_ari  ? full_result[7] : 1'b0;
 assign valid_o  = valid;
 assign result_o = full_result[7:0];
 assign alu_flags_o = {z_flag, o_flag, c_flag, n_flag};
+
 endmodule

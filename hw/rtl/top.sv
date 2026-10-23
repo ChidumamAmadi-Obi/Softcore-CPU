@@ -1,8 +1,8 @@
 `include "constants.svh"
 
 module top (
-    input wire sys_clk_i,
-    input wire sys_rstn_i
+    input logic sys_clk_i,
+    input logic sys_rstn_i
 );
 
 memory memory_i (
