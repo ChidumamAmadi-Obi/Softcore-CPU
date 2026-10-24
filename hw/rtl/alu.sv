@@ -50,15 +50,24 @@ end
 assign z_flag   = full_result[7:0] == 8'h00;
 assign c_flag   = is_add || is_mul ? full_result > 16'h00FF
                 : is_sub           ? b > a
-                : 1'b0; // no carry for division
+                : 1'b0; // no carry for division or logical ops
 assign o_flag   = is_add  ? (a[7] == b[7] ) && (full_result[7] != a[7]) 
                 : is_sub  ? (a[7] != b[7] ) && (full_result[7] != a[7]) 
                 : is_mul  ? full_result > 16'h00FF
-                : 1'b0; // no overflow for division    
+                : 1'b0; // no overflow for division or logical ops
 assign n_flag   = is_ari  ? full_result[7] : 1'b0;
 
 assign valid_o  = valid;
 assign result_o = full_result[7:0];
 assign alu_flags_o = {z_flag, o_flag, c_flag, n_flag};
+
+`ifndef SYNTHESIS
+always_comb begin
+    alu_flag_assert:
+        assert (is_ari || (alu_flags_o[2:0] == 3'h0))
+        else 
+            $error("\033[33mARITHMETIC FLAGS NON-ZERO DURRING LOGICAL OPERATION\033[0m");    
+end
+`endif
 
 endmodule

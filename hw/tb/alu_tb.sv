@@ -8,7 +8,7 @@ typedef struct packed {
     logic valid;
 } alu_results;
 
-`define NUMBER_OF_TESTS 100
+`define NUMBER_OF_TESTS 500 // speficy number of randomized test vectors
 
 module alu_tb;
 
@@ -25,7 +25,7 @@ logic valid;
 alu_results expected, actual;
 
 int test_no;
-int no_errors;
+int errors;
 
 alu alu_dut(
     .sys_clk_i(clk),
@@ -123,11 +123,11 @@ endtask
 
 task testAlu;
 ref int test_no;
-ref int no_errors;
+ref int errors;
 
     logic [7:0] a, b;
     opcode sel;
-    for (int i=0; i<`NUMBER_OF_TESTS+1; i++) begin 
+    for (int i=0; i<=`NUMBER_OF_TESTS/2; i++) begin 
         a=$urandom_range(MIN_OPERAND,MAX_OPERAND);
         b=$urandom_range(MIN_OPERAND,MAX_OPERAND);
         sel=opcode'($urandom_range(OP_ADD, OP_DIV));
@@ -137,22 +137,33 @@ ref int no_errors;
             $display("\033[33m!!! [test: %0d] ALU OUTPUT MISMATCH: '%s' 0x%02h 0x%02h\033[0m at %0.1f", test_no, opcode2str(sel), a, b, $realtime);
             $display("         expected: 0x%04h 0x%02h z:%b o:%b c:%b n:%b valid:%b", expected.full_result, expected.result, expected.flags[3], expected.flags[2], expected.flags[1], expected.flags[0], expected.valid);
             $display("         actual  : 0x%04h 0x%02h z:%b o:%b c:%b n:%b valid:%b", actual.full_result,   actual.result,   actual.flags[3],   actual.flags[2],   actual.flags[1],   actual.flags[0],   actual.valid);
-            no_errors++;
+            errors++;
         end
         test_no++;
+
+        sel=opcode'($urandom_range(OP_ADDI, OP_DIVI));
+        driveAlu(sel, a, b, actual);
+        expected = refAlu(sel, a, b);
+        if (expected != actual) begin 
+            $display("\033[33m!!! [test: %0d] ALU OUTPUT MISMATCH: '%sI' 0x%02h 0x%02h\033[0m at %0.1f", test_no, opcode2str(sel), a, b, $realtime);
+            $display("         expected: 0x%04h 0x%02h z:%b o:%b c:%b n:%b valid:%b", expected.full_result, expected.result, expected.flags[3], expected.flags[2], expected.flags[1], expected.flags[0], expected.valid);
+            $display("         actual  : 0x%04h 0x%02h z:%b o:%b c:%b n:%b valid:%b", actual.full_result,   actual.result,   actual.flags[3],   actual.flags[2],   actual.flags[1],   actual.flags[0],   actual.valid);
+            errors++;
+        end
+        test_no++;        
     end
 endtask
 
 always #1 clk = ~clk;
 initial begin 
     init;
-    testAlu(test_no,no_errors);
+    testAlu(test_no,errors);
 
-    if (no_errors) begin 
-        $display("\033[31mFAILED: %0d/%0d\033[0m", no_errors,`NUMBER_OF_TESTS);
+    if (errors) begin 
+        $display("\033[31mFAILED: %0d/%0d\033[0m", errors,`NUMBER_OF_TESTS+1);
     end 
 
-    passFail("ALU", no_errors);
+    passFail("ALU", errors);
     $finish;
 end
 endmodule

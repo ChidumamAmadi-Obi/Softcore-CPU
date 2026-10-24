@@ -38,6 +38,15 @@ typedef enum logic [15:0] {
     OUT_PORT_1 = 16'h0402
 } peripheral_address;
 
+
+// control unit states
+typedef enum logic [2:0] { 
+    NONE,
+    FETCH,
+    DECODE,
+    EXECUTE
+} cu_states;
+
 // ISA
 typedef enum logic [7:0] { 
     OP_HALT,

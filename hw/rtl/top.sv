@@ -10,7 +10,7 @@ module top (
 memory memory_i (
     .sys_clk_i(sys_clk_i),
     .sys_rstn_i(sys_rstn_i),
-    .address_i(),
+    .address_bus_i(),
     .we_i(),
     .data_i(),
     .data_o(),
@@ -18,8 +18,8 @@ memory memory_i (
 );
 
 periphs periphs_o (
-    .sys_clk_i(),
-    .sys_rstn_i(),
+    .sys_clk_i(sys_clk_i),
+    .sys_rstn_i(sys_rstn_i),
     .address_bus_i(),
     .data_i(),
     .led_arr_o(led_arr_o),

@@ -25,7 +25,7 @@ logic [7:0] test_ram_3 [255:0];
 memory memory_dut (
     .sys_clk_i(clk),
     .sys_rstn_i(rstn),
-    .address_i(address),
+    .address_bus_i(address),
     .we_i(we),
     .data_i(data_in),
     .data_o(data_out),
