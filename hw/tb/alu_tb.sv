@@ -152,7 +152,7 @@ initial begin
         $display("\033[31mFAILED: %0d/%0d\033[0m", no_errors,`NUMBER_OF_TESTS);
     end 
 
-    passFail(no_errors);
+    passFail("ALU", no_errors);
     $finish;
 end
 endmodule

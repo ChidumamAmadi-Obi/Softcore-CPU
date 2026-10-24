@@ -142,7 +142,7 @@ initial begin
         $display("\033[31m%0d LOADING ERROR(S) \033[0m", loading_errors);
     end
 
-    passFail(rw_errors || loading_errors);
+    passFail("MEMORY CONTROLLER",(rw_errors || loading_errors));
 
     $finish;
 end
