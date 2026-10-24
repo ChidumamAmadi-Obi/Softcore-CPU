@@ -8,7 +8,6 @@ logic        clk = 0;
 logic        rstn = 0;
 logic [15:0] address = 16'h0000;
 logic        we = 0;
-logic        cen = 0;
 logic [7:0]  data_in = 8'h00;
 logic [7:0]  data_out;
 logic        valid;
@@ -28,7 +27,6 @@ memory memory_dut (
     .sys_rstn_i(rstn),
     .address_i(address),
     .we_i(we),
-    .cen_i(cen),
     .data_i(data_in),
     .data_o(data_out),
     .valid_o(valid));
@@ -48,7 +46,6 @@ output logic [7:0] data;
     @(negedge clk);
     address = {bank,addr};
     we      = 1'b0;
-    cen     = 1'b0;
 
     @(posedge clk);   // mem registers the read here
     #1;          
@@ -67,7 +64,6 @@ input logic [7:0] data;
     address = {bank,addr};
     data_in = data;
     we      = 1'b1;
-    cen     = 1'b0;
 
     @(posedge clk);
     #1;               
@@ -141,13 +137,9 @@ initial begin
 
     if (rw_errors) begin 
         $display("\033[31m%0d READ/WRITE ERROR(S) \033[0m", rw_errors);
-    end else begin 
-        $display("\033[32mNO READ/WRITE ERRORS \033[0m");
-    end
+    end 
     if (loading_errors) begin 
         $display("\033[31m%0d LOADING ERROR(S) \033[0m", loading_errors);
-    end else begin 
-        $display("\033[32mNO LOADING ERRORS \033[0m");
     end
 
     passFail(rw_errors || loading_errors);

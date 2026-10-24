@@ -49,10 +49,15 @@ help: # shows message
 	@echo  MAKEFILE TARGETS:
 	@echo  - lint-rtl
 	@echo  - lint-rtl-mem
+	@echo  - lint-rtl-cu	
+	@echo  - lint-rtl-cpu
+	@echo  - lint-rtl-pph
 	@echo  - lint-rtl-alu	
+
 	@echo  - run-tb
 	@echo  - run-tb-mem
 	@echo  - run-tb-alu
+	
 	@echo  - clean
 	@echo  - help
 

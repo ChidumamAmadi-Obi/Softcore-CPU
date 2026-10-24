@@ -28,6 +28,9 @@ parameter MAX_OPERAND = 8'hFF;
 parameter MIN_OPERAND = 8'h00;
 parameter MAX_ADDR_MEM = 16'h0400;
 
+parameter MEM_CEN = 6'h00;
+parameter PERIPH_CEN = 6'h01;
+
 // addresses for memory mapped peripherals
 typedef enum logic [15:0] { 
     LED_ARRAY  = 16'h0400,

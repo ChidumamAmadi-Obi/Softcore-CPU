@@ -5,7 +5,6 @@ module memory (
     input logic sys_rstn_i,
     input logic [15:0] address_i,
     input logic we_i, // write enable 
-    input logic cen_i, // chip en (active low)
     input logic [7:0] data_i,
     output logic [7:0] data_o,
     output logic valid_o
@@ -16,6 +15,7 @@ logic [7:0] ram_1 [`MEM_BANK_LEN-1:0];
 logic [7:0] ram_2 [`MEM_BANK_LEN-1:0];
 logic [7:0] ram_3 [`MEM_BANK_LEN-1:0];
 
+wire cen = (address_i[15:10] == MEM_CEN) ? 1'b0 : 1'b1; // 0000_00zz zzzz_zzzz
 logic [7:0] data_out;
 logic valid;
 
@@ -34,7 +34,7 @@ initial begin
 end
 
 always @(posedge sys_clk_i) begin 
-    if (!sys_rstn_i || cen_i) begin 
+    if (!sys_rstn_i || cen) begin 
         valid       <= 1'h0;
         data_out    <= 8'h00;
     end else begin 
