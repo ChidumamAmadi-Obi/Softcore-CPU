@@ -1,4 +1,5 @@
 `include "constants.svh"
+`include "utils_tb.svh"
 
 module memory_tb;
 
@@ -105,7 +106,8 @@ initial begin
             read_data);
 
         if (expected_data !== read_data) begin 
-            $display("!!! PROGRAM LOADING ERROR, EXPECTED: 0x%02h READ: 0x%02h ADDR: 0x%04h at %f",
+            $display("\033[33m!!! [bank %0d] PROGRAM LOADING ERROR, EXPECTED: 0x%02h READ: 0x%02h ADDR: 0x%04h at %f \033[0m",
+                test_address[15:8],
                 expected_data,
                 read_data,
                 test_address,
@@ -127,7 +129,8 @@ initial begin
             read_data);
         
         if (written_data !== read_data) begin 
-            $display("!!! READBACK ERROR, EXPECTED: 0x%02h READ: 0x%02h ADDR: 0x%04h at %f",
+            $display("\033[33m!!! [bank %0d] READBACK ERROR, EXPECTED: 0x%02h READ: 0x%02h ADDR: 0x%04h at %f \033[0m",
+                test_address[15:8],
                 written_data,
                 read_data,
                 test_address,
@@ -137,15 +140,18 @@ initial begin
     end
 
     if (rw_errors) begin 
-        $display("EXITED WITH %d READ/WRITE ERROR(S)", rw_errors);
+        $display("\033[31m%0d READ/WRITE ERROR(S) \033[0m", rw_errors);
     end else begin 
-        $display("EXITED WITH NO READ/WRITE ERRORS");
+        $display("\033[32mNO READ/WRITE ERRORS \033[0m");
     end
     if (loading_errors) begin 
-        $display("EXITED WITH %d LOADING ERROR(S)", loading_errors);
+        $display("\033[31m%0d LOADING ERROR(S) \033[0m", loading_errors);
     end else begin 
-        $display("EXITED WITH NO LOADING ERRORS");
+        $display("\033[32mNO LOADING ERRORS \033[0m");
     end
+
+    passFail(rw_errors || loading_errors);
+
     $finish;
 end
 endmodule

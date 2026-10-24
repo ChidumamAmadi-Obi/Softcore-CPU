@@ -1,4 +1,5 @@
 `include "constants.svh"
+`include "utils_tb.svh"
 
 typedef struct packed {
     logic [15:0] full_result;
@@ -6,6 +7,8 @@ typedef struct packed {
     logic [3:0] flags;
     logic valid;
 } alu_results;
+
+`define NUMBER_OF_TESTS 100
 
 module alu_tb;
 
@@ -21,8 +24,8 @@ logic valid;
 
 alu_results expected, actual;
 
-integer testNo;
-integer noOfErrors;
+int test_no;
+int no_errors;
 
 alu alu_dut(
     .sys_clk_i(clk),
@@ -34,14 +37,6 @@ alu alu_dut(
     .result_o(result),
     .alu_flags_o(flags),
     .valid_o(valid)); // output all alu flags
-
-task init;
-    $dumpfile("tb/wave/alu.vcd");
-    $dumpvars(0,alu_tb);
-
-    repeat (2) @(posedge clk); // wait 2 clk cycles
-    rstn = 1;    
-endtask
 
 function automatic alu_results refAlu(
     input opcode sel,
@@ -80,6 +75,29 @@ function automatic alu_results refAlu(
     expected.flags[0]   = is_ari  ? expected.full_result[7] : 1'b0;
     return expected;
 endfunction
+function automatic string opcode2str(input opcode sel);
+    case (sel)
+        OP_ADD, OP_ADDI: return "ADD";
+        OP_SUB, OP_SUBI: return "SUB";
+        OP_MUL, OP_MULI: return "MUL";
+        OP_DIV, OP_DIVI: return "DIV";
+
+        OP_AND, OP_ANDI: return "AND";
+        OP_OR, OP_ORI:   return "OR";
+        OP_XOR, OP_XORI: return "XOR";
+        OP_EQU, OP_EQUI: return "EQU";
+        default:         return "'UNKNOWN'";
+    endcase
+    return "'UNKNOWN'";
+endfunction
+
+task init;
+    $dumpfile("tb/wave/alu.vcd");
+    $dumpvars(0,alu_tb);
+
+    repeat (2) @(posedge clk); // wait 2 clk cycles
+    rstn = 1;    
+endtask
 
 task driveAlu;
 input opcode sel;
@@ -104,30 +122,37 @@ output alu_results results;
 endtask
 
 task testAlu;
-ref integer testNo;
-ref integer noOfErrors;
+ref int test_no;
+ref int no_errors;
 
     logic [7:0] a, b;
-    for (int i=0; i<10; i++) begin 
+    opcode sel;
+    for (int i=0; i<`NUMBER_OF_TESTS+1; i++) begin 
         a=$urandom_range(MIN_OPERAND,MAX_OPERAND);
         b=$urandom_range(MIN_OPERAND,MAX_OPERAND);
-        driveAlu(OP_ADD, a, b, actual);
-        expected = refAlu(OP_ADD, a, b);
+        sel=opcode'($urandom_range(OP_ADD, OP_DIV));
+        driveAlu(sel, a, b, actual);
+        expected = refAlu(sel, a, b);
         if (expected != actual) begin 
-            $display("!!! [test: %d] ALU OUTPUT MISMATCH: OP_ADD 0x%02h 0x%02h at %0.1f", testNo, a, b, $realtime);
+            $display("\033[33m!!! [test: %0d] ALU OUTPUT MISMATCH: '%s' 0x%02h 0x%02h\033[0m at %0.1f", test_no, opcode2str(sel), a, b, $realtime);
             $display("         expected: 0x%04h 0x%02h z:%b o:%b c:%b n:%b valid:%b", expected.full_result, expected.result, expected.flags[3], expected.flags[2], expected.flags[1], expected.flags[0], expected.valid);
-            $display("         actual  : 0x%04h 0x%02h z:%b o:%b c:%b n:%b valid:%b", actual.full_result, actual.result, actual.flags[3], actual.flags[2], actual.flags[1], actual.flags[0], actual.valid);
-            noOfErrors++;
+            $display("         actual  : 0x%04h 0x%02h z:%b o:%b c:%b n:%b valid:%b", actual.full_result,   actual.result,   actual.flags[3],   actual.flags[2],   actual.flags[1],   actual.flags[0],   actual.valid);
+            no_errors++;
         end
-        testNo++;
+        test_no++;
     end
-    
 endtask
 
 always #1 clk = ~clk;
 initial begin 
     init;
-    testAlu(testNo,noOfErrors);
+    testAlu(test_no,no_errors);
+
+    if (no_errors) begin 
+        $display("\033[31mFAILED: %0d/%0d\033[0m", no_errors,`NUMBER_OF_TESTS);
+    end 
+
+    passFail(no_errors);
     $finish;
 end
 endmodule
