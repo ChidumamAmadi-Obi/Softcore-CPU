@@ -11,15 +11,22 @@ module memory (
     output logic valid_o
     );
 
-logic [7:0] ram_0 [255:0];
-logic [7:0] ram_1 [255:0];
-logic [7:0] ram_2 [255:0];
-logic [7:0] ram_3 [255:0];
+logic [7:0] ram_0 [`MEM_BANK_LEN-1:0];
+logic [7:0] ram_1 [`MEM_BANK_LEN-1:0];
+logic [7:0] ram_2 [`MEM_BANK_LEN-1:0];
+logic [7:0] ram_3 [`MEM_BANK_LEN-1:0];
 
 logic [7:0] data_out;
 logic valid;
 
 initial begin 
+    for (int i=0; i<`MEM_BANK_LEN; i++) begin 
+        ram_0[i] = 8'h00;
+        ram_1[i] = 8'h00;
+        ram_2[i] = 8'h00;
+        ram_3[i] = 8'h00;
+    end
+    
     $readmemh(`RAM_0_FILE_PATH,ram_0);
     $readmemh(`RAM_1_FILE_PATH,ram_1);
     $readmemh(`RAM_2_FILE_PATH,ram_2);

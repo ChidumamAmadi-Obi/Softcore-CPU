@@ -16,12 +16,16 @@
     `define RAM_3_FILE_PATH "hex/ram_3.hex"
 `endif 
 
+`define MEM_BANK_LEN 256
+
 // bit lengths
 `define ADDR_LEN 16 // bit length of address
 `define DATA_LEN 8  
 `define GP_REGS  16 // no of general purpose registers
 `define INST_LEN 32
 
+parameter MAX_OPERAND = 8'hFF;
+parameter MIN_OPERAND = 8'h00;
 parameter MAX_ADDR_MEM = 16'h0400;
 
 // addresses for memory mapped peripherals
@@ -29,7 +33,7 @@ typedef enum logic [15:0] {
     LED_ARRAY  = 16'h0400,
     OUT_PORT_0 = 16'h0401,
     OUT_PORT_1 = 16'h0402
-} Peripheral_address;
+} peripheral_address;
 
 // ISA
 typedef enum logic [7:0] { 
@@ -62,6 +66,6 @@ typedef enum logic [7:0] {
     OP_CALL,
     OP_RET,
     OP_NOP
-} Opcodes;
+} opcode;
 
 `endif

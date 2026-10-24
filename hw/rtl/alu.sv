@@ -4,7 +4,7 @@ module alu(
     input logic sys_clk_i,
     input logic sys_rstn_i,
     input logic cen_i,
-    input logic [7:0] opcode_i,
+    input opcode opcode_i,
     input logic [7:0] operand_a_i,
     input logic [7:0] operand_b_i,
 
@@ -17,11 +17,11 @@ logic [7:0] a, b;
 logic valid;
 logic z_flag, o_flag, c_flag, n_flag;
 
-logic is_add  = (opcode_i == OP_ADD) || (opcode_i == OP_ADDI);
-logic is_sub  = (opcode_i == OP_SUB) || (opcode_i == OP_SUBI);
-logic is_mul  = (opcode_i == OP_MUL) || (opcode_i == OP_MULI);
-logic is_div  = (opcode_i == OP_DIV) || (opcode_i == OP_DIVI);
-logic is_ari  = (is_add || is_sub || is_mul || is_div);
+wire is_add  = (opcode_i == OP_ADD) || (opcode_i == OP_ADDI);
+wire is_sub  = (opcode_i == OP_SUB) || (opcode_i == OP_SUBI);
+wire is_mul  = (opcode_i == OP_MUL) || (opcode_i == OP_MULI);
+wire is_div  = (opcode_i == OP_DIV) || (opcode_i == OP_DIVI);
+wire is_ari  = (is_add || is_sub || is_mul || is_div);
 
 always @(posedge sys_clk_i) begin 
     if (!sys_rstn_i || cen_i) begin 
@@ -51,8 +51,8 @@ assign z_flag   = full_result[7:0] == 8'h00;
 assign c_flag   = is_add || is_mul ? full_result > 16'h00FF
                 : is_sub           ? b > a
                 : 1'b0; // no carry for division
-assign o_flag   = is_add  ? (a[7] == b[7] ) && (full_result[7] != a) 
-                : is_sub  ? (a[7] != b[7] ) && (full_result[7] != a) 
+assign o_flag   = is_add  ? (a[7] == b[7] ) && (full_result[7] != a[7]) 
+                : is_sub  ? (a[7] != b[7] ) && (full_result[7] != a[7]) 
                 : is_mul  ? full_result > 16'h00FF
                 : 1'b0; // no overflow for division    
 assign n_flag   = is_ari  ? full_result[7] : 1'b0;

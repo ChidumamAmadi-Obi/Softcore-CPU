@@ -1,6 +1,6 @@
 .vscode/
 obj_dir/
-tb/wave/
+wave/
 *.vvp
 *.fs
 *.json

@@ -1,22 +1,34 @@
 `include "constants.svh"
 
+typedef struct packed {
+    logic [15:0] full_result;
+    logic [7:0] result;
+    logic [3:0] flags;
+    logic valid;
+} alu_results;
+
 module alu_tb;
 
 logic clk = 1'b0;
 logic rstn = 1'b0;
 logic cen = 1'b0;
-logic [7:0] opcode = 8'h00;
+opcode test_opcode = OP_HALT;
 logic [7:0] operand_a = 8'h00;
 logic [7:0] operand_b = 8'h00;
 logic [7:0] result;
 logic [3:0] flags;
 logic valid;
 
+alu_results expected, actual;
+
+integer testNo;
+integer noOfErrors;
+
 alu alu_dut(
     .sys_clk_i(clk),
     .sys_rstn_i(rstn),
     .cen_i(cen),
-    .opcode_i(opcode),
+    .opcode_i(test_opcode),
     .operand_a_i(operand_a),
     .operand_b_i(operand_b),
     .result_o(result),
@@ -31,15 +43,53 @@ task init;
     rstn = 1;    
 endtask
 
-task testAlu;
-input logic [7:0] sel;
+function automatic alu_results refAlu(
+    input opcode sel,
+    input logic [7:0] a,
+    input logic [7:0] b );
+
+    alu_results expected;
+    integer is_add  = (sel == OP_ADD) || (sel == OP_ADDI);
+    integer is_sub  = (sel == OP_SUB) || (sel == OP_SUBI);
+    integer is_mul  = (sel == OP_MUL) || (sel == OP_MULI);
+    integer is_div  = (sel == OP_DIV) || (sel == OP_DIVI);
+    integer is_ari  = (is_add || is_sub || is_mul || is_div);
+
+    case(sel)
+        OP_ADD, OP_ADDI: begin expected.full_result = a + b;    expected.valid = 1'b1; end
+        OP_SUB, OP_SUBI: begin expected.full_result = a - b;    expected.valid = 1'b1; end
+        OP_MUL, OP_MULI: begin expected.full_result = a * b;    expected.valid = 1'b1; end
+        OP_DIV, OP_DIVI: begin expected.full_result = a / b;    expected.valid = 1'b1; end
+
+        OP_AND, OP_ANDI: begin expected.full_result = a & b;    expected.valid = 1'b1; end
+        OP_OR, OP_ORI:   begin expected.full_result = a | b;    expected.valid = 1'b1; end
+        OP_XOR, OP_XORI: begin expected.full_result = a ^ b;    expected.valid = 1'b1; end
+        OP_EQU, OP_EQUI: begin expected.full_result = a == b;   expected.valid = 1'b1; end
+        default:         begin expected.full_result = 16'h0000; expected.valid = 1'b0; end
+    endcase
+
+    expected.result     = expected.full_result[7:0];
+    expected.flags[3]   = expected.result[7:0] == 8'h00;
+    expected.flags[1]   = is_add || is_mul ? expected.full_result > 16'h00FF
+                        : is_sub           ? b > a
+                        : 1'b0; // no carry for division
+    expected.flags[2]   = is_add  ? (a[7] == b[7] ) && (expected.full_result[7] != a[7]) 
+                        : is_sub  ? (a[7] != b[7] ) && (expected.full_result[7] != a[7]) 
+                        : is_mul  ? expected.full_result > 16'h00FF
+                        : 1'b0; // no overflow for division    
+    expected.flags[0]   = is_ari  ? expected.full_result[7] : 1'b0;
+    return expected;
+endfunction
+
+task driveAlu;
+input opcode sel;
 input logic [7:0] a;
 input logic [7:0] b;
-// output logic [7:0] result;
+output alu_results results;
 
     @(negedge clk);
         cen = 1'b0;
-        opcode=sel;
+        test_opcode=sel;
         operand_a=a;
         operand_b=b;
 
@@ -47,16 +97,37 @@ input logic [7:0] b;
     #(1);
     // takes one clk cycle to output result
 
-    $display("RESULT: 0x%04h, 0x%02h", alu_dut.full_result, result);
-    $display("        z o c n");
-    $display("FLAGS:  %b %b %b %b", flags[3], flags[2], flags[1], flags[0]);
+    results.full_result = alu_dut.full_result;
+    results.result = result;
+    results.flags = {flags[3], flags[2], flags[1], flags[0]};
+    results.valid = valid;
+endtask
+
+task testAlu;
+ref integer testNo;
+ref integer noOfErrors;
+
+    logic [7:0] a, b;
+    for (int i=0; i<10; i++) begin 
+        a=$urandom_range(MIN_OPERAND,MAX_OPERAND);
+        b=$urandom_range(MIN_OPERAND,MAX_OPERAND);
+        driveAlu(OP_ADD, a, b, actual);
+        expected = refAlu(OP_ADD, a, b);
+        if (expected != actual) begin 
+            $display("!!! [test: %d] ALU OUTPUT MISMATCH: OP_ADD 0x%02h 0x%02h at %0.1f", testNo, a, b, $realtime);
+            $display("         expected: 0x%04h 0x%02h z:%b o:%b c:%b n:%b valid:%b", expected.full_result, expected.result, expected.flags[3], expected.flags[2], expected.flags[1], expected.flags[0], expected.valid);
+            $display("         actual  : 0x%04h 0x%02h z:%b o:%b c:%b n:%b valid:%b", actual.full_result, actual.result, actual.flags[3], actual.flags[2], actual.flags[1], actual.flags[0], actual.valid);
+            noOfErrors++;
+        end
+        testNo++;
+    end
+    
 endtask
 
 always #1 clk = ~clk;
 initial begin 
     init;
-    testAlu(OP_SUB, 8'h00, 8'h01);
-    #(10);
+    testAlu(testNo,noOfErrors);
     $finish;
 end
 endmodule
