@@ -45,7 +45,7 @@ typedef enum logic [2:0] {
     FETCH,
     DECODE,
     EXECUTE
-} cu_states;
+} cpu_states;
 
 // ISA
 typedef enum logic [7:0] { 

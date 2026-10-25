@@ -37,10 +37,7 @@ always @(posedge sys_clk_i) begin
             OP_ADD, OP_ADDI: begin full_result <= a + b;    valid <= 1'b1; end
             OP_SUB, OP_SUBI: begin full_result <= a - b;    valid <= 1'b1; end
             OP_MUL, OP_MULI: begin full_result <= a * b;    valid <= 1'b1; end
-            OP_DIV, OP_DIVI: begin 
-                full_result <= (b != 8'h00) ? a / b; valid <= 1'b1; 
-                                            : full_result <= (b != 8'h00) a / b; valid <= 1'b0; 
-                             end
+            OP_DIV, OP_DIVI: begin full_result <= a / b;    valid <= 1'b1; end // note: need to handle division by zero
     
             OP_AND, OP_ANDI: begin full_result <= a & b;    valid <= 1'b1; end
             OP_OR, OP_ORI:   begin full_result <= a | b;    valid <= 1'b1; end
