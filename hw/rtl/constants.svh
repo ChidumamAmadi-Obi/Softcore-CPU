@@ -21,8 +21,12 @@
 // bit lengths
 `define ADDR_LEN 16 // bit length of address
 `define DATA_LEN 8  
+`define FULL_RESULT_LEN 16
 `define GP_REGS  16 // no of general purpose registers
 `define INST_LEN 32
+`define OUT_PORT_0_LEN 8
+`define OUT_PORT_1_LEN 8
+`define OUT_PORT_LEN 16
 
 parameter MAX_OPERAND = 8'hFF;
 parameter MIN_OPERAND = 8'h00;

@@ -5,15 +5,15 @@ module alu(
     input logic sys_rstn_i,
     input logic cen_i,
     input opcode opcode_i,
-    input logic [7:0] operand_a_i,
-    input logic [7:0] operand_b_i,
+    input logic [`DATA_LEN-1:0] operand_a_i,
+    input logic [`DATA_LEN-1:0] operand_b_i,
 
-    output logic [7:0] result_o,
+    output logic [`DATA_LEN-1:0] result_o,
     output logic [3:0] alu_flags_o, // output all alu flags
     output logic valid_o);
 
-logic [15:0] full_result;
-logic [7:0] a, b;
+logic [`FULL_RESULT_LEN-1:0] full_result;
+logic [`DATA_LEN-1:0] a, b;
 logic valid;
 logic z_flag, o_flag, c_flag, n_flag;
 
@@ -25,9 +25,9 @@ wire is_ari  = (is_add || is_sub || is_mul || is_div);
 
 always @(posedge sys_clk_i) begin 
     if (!sys_rstn_i || !cen_i) begin 
-        full_result     <= 16'h0000;
-        a               <= 8'h00;
-        b               <= 8'h00;
+        full_result     <= `FULL_RESULT_LEN'h0000;
+        a               <= `DATA_LEN'h00;
+        b               <= `DATA_LEN'h00;
         valid           <= 1'b0;
     end else begin
         a <= operand_a_i;
@@ -43,22 +43,22 @@ always @(posedge sys_clk_i) begin
             OP_OR, OP_ORI:   begin full_result <= a | b;    valid <= 1'b1; end
             OP_XOR, OP_XORI: begin full_result <= a ^ b;    valid <= 1'b1; end
             OP_EQU, OP_EQUI: begin full_result <= a == b;   valid <= 1'b1; end
-            default:         begin full_result <= 16'h0000; valid <= 1'b0; end
+            default:         begin full_result <= `FULL_RESULT_LEN'h0000; valid <= 1'b0; end
         endcase
     end
 end
-assign z_flag   = full_result[7:0] == 8'h00;
-assign c_flag   = is_add || is_mul ? full_result > 16'h00FF
+assign z_flag   = full_result[`DATA_LEN-1:0] == `DATA_LEN'h00;
+assign c_flag   = is_add || is_mul ? full_result > `FULL_RESULT_LEN'h00FF
                 : is_sub           ? b > a
                 : 1'b0; // no carry for division or logical ops
-assign o_flag   = is_add  ? (a[7] == b[7] ) && (full_result[7] != a[7]) 
-                : is_sub  ? (a[7] != b[7] ) && (full_result[7] != a[7]) 
-                : is_mul  ? full_result > 16'h00FF
+assign o_flag   = is_add  ? (a[`DATA_LEN-1] == b[`DATA_LEN-1] ) && (full_result[`DATA_LEN-1] != a[`DATA_LEN-1]) 
+                : is_sub  ? (a[`DATA_LEN-1] != b[`DATA_LEN-1] ) && (full_result[`DATA_LEN-1] != a[`DATA_LEN-1]) 
+                : is_mul  ? full_result > `FULL_RESULT_LEN'h00FF
                 : 1'b0; // no overflow for division or logical ops
-assign n_flag   = is_ari  ? full_result[7] : 1'b0;
+assign n_flag   = is_ari  ? full_result[`DATA_LEN-1] : 1'b0;
 
 assign valid_o  = valid;
-assign result_o = full_result[7:0];
+assign result_o = full_result[`DATA_LEN-1:0];
 assign alu_flags_o = {z_flag, o_flag, c_flag, n_flag};
 
 `ifndef SYNTHESIS

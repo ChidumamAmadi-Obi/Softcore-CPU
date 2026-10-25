@@ -5,7 +5,6 @@ module no_bytes(
     input logic cen_i,
     output logic [2:0] no_bytes_o,
     output logic rdy_o);
-
 always @* begin 
     if (cen_i) begin 
         case(opcode_i)
