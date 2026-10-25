@@ -9,8 +9,8 @@ module alu(
     input logic [7:0] operand_b_i,
 
     output logic [7:0] result_o,
-    output logic [3:0] alu_flags_o,
-    output logic valid_o); // output all alu flags
+    output logic [3:0] alu_flags_o, // output all alu flags
+    output logic valid_o);
 
 logic [15:0] full_result;
 logic [7:0] a, b;
