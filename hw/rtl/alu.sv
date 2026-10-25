@@ -24,7 +24,7 @@ wire is_div  = (opcode_i == OP_DIV) || (opcode_i == OP_DIVI);
 wire is_ari  = (is_add || is_sub || is_mul || is_div);
 
 always @(posedge sys_clk_i) begin 
-    if (!sys_rstn_i || cen_i) begin 
+    if (!sys_rstn_i || !cen_i) begin 
         full_result     <= 16'h0000;
         a               <= 8'h00;
         b               <= 8'h00;
@@ -37,7 +37,10 @@ always @(posedge sys_clk_i) begin
             OP_ADD, OP_ADDI: begin full_result <= a + b;    valid <= 1'b1; end
             OP_SUB, OP_SUBI: begin full_result <= a - b;    valid <= 1'b1; end
             OP_MUL, OP_MULI: begin full_result <= a * b;    valid <= 1'b1; end
-            OP_DIV, OP_DIVI: begin full_result <= a / b;    valid <= 1'b1; end
+            OP_DIV, OP_DIVI: begin 
+                full_result <= (b != 8'h00) ? a / b; valid <= 1'b1; 
+                                            : full_result <= (b != 8'h00) a / b; valid <= 1'b0; 
+                             end
     
             OP_AND, OP_ANDI: begin full_result <= a & b;    valid <= 1'b1; end
             OP_OR, OP_ORI:   begin full_result <= a | b;    valid <= 1'b1; end

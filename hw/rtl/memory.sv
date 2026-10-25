@@ -15,7 +15,7 @@ logic [7:0] ram_1 [`MEM_BANK_LEN-1:0];
 logic [7:0] ram_2 [`MEM_BANK_LEN-1:0];
 logic [7:0] ram_3 [`MEM_BANK_LEN-1:0];
 
-wire cen = (address_bus_i[15:10] == MEM_CEN) ? 1'b0 : 1'b1;
+wire cen = (address_bus_i[15:10] == MEM_CEN) ? 1'b1 : 1'b0;
 logic [7:0] data_out;
 logic valid;
 
@@ -34,7 +34,7 @@ initial begin
 end
 
 always @(posedge sys_clk_i) begin 
-    if (!sys_rstn_i || cen) begin 
+    if (!sys_rstn_i || !cen) begin 
         valid       <= 1'h0;
         data_out    <= 8'h00;
     end else begin 

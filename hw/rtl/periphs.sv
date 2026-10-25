@@ -14,11 +14,11 @@ module periphs(
     logic [5:0] led_array;
     logic [15:0] output_port;
 
-    wire periph_cen = (address_i[15:10] == PERIPH_CEN) ? 1'b0 : 1'b1; // 00000100 00000000
+    wire periph_cen = (address_bus_i[15:10] == PERIPH_CEN) ? 1'b1 : 1'b0; // 00000100 00000000
     logic [7:0] periph_address = address_bus_i[7:0];
 
     always @(posedge sys_clk_i) begin 
-        if (!sys_rstn_i || periph_cen) begin 
+        if (!sys_rstn_i || !periph_cen) begin 
             led_array <= 6'h00;
             output_port <= 16'h0000;      
         end else begin 

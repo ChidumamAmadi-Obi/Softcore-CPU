@@ -106,7 +106,7 @@ input logic [7:0] b;
 output alu_results results;
 
     @(negedge clk);
-        cen = 1'b0;
+        cen = 1'b1; // enable 
         test_opcode=sel;
         operand_a=a;
         operand_b=b;
@@ -119,6 +119,8 @@ output alu_results results;
     results.result = result;
     results.flags = {flags[3], flags[2], flags[1], flags[0]};
     results.valid = valid;
+
+    cen = 1'b0;
 endtask
 
 task testAlu;
