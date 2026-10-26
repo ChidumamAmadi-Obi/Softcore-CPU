@@ -18,10 +18,10 @@ module periphs(
     logic [7:0] periph_address = address_bus_i[7:0];
 
     always @(posedge sys_clk_i) begin 
-        if (!sys_rstn_i || !periph_cen) begin 
+        if (!sys_rstn_i) begin 
             led_array <= 6'h00;
             output_port <= `OUT_PORT_LEN'h0000;      
-        end else begin 
+        end else if (periph_cen) begin 
             case(periph_address)
                 LED_ARRAY:  led_array <= ~data_i[5:0];
                 OUT_PORT_0: output_port[`OUT_PORT_0_LEN-1:0] <= data_i;

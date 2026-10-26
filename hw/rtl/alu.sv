@@ -24,12 +24,12 @@ wire is_div  = (opcode_i == OP_DIV) || (opcode_i == OP_DIVI);
 wire is_ari  = (is_add || is_sub || is_mul || is_div);
 
 always @(posedge sys_clk_i) begin 
-    if (!sys_rstn_i || !cen_i) begin 
+    if (!sys_rstn_i) begin 
         full_result     <= `FULL_RESULT_LEN'h0000;
         a               <= `DATA_LEN'h00;
         b               <= `DATA_LEN'h00;
         valid           <= 1'b0;
-    end else begin
+    end else if (cen_i) begin
         a <= operand_a_i;
         b <= operand_b_i;
 

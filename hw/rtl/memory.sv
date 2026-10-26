@@ -15,7 +15,7 @@ logic [`DATA_LEN-1:0] ram_1 [`MEM_BANK_LEN-1:0];
 logic [`DATA_LEN-1:0] ram_2 [`MEM_BANK_LEN-1:0];
 logic [`DATA_LEN-1:0] ram_3 [`MEM_BANK_LEN-1:0];
 
-wire cen = (address_bus_i[`ADDR_LEN-1:10] == MEM_CEN) ? 1'b1 : 1'b0;
+wire mem_cen = (address_bus_i[`ADDR_LEN-1:10] == MEM_CEN) ? 1'b1 : 1'b0;
 logic [`DATA_LEN-1:0] data_out;
 logic valid;
 
@@ -34,10 +34,10 @@ initial begin
 end
 
 always @(posedge sys_clk_i) begin 
-    if (!sys_rstn_i || !cen) begin 
+    if (!sys_rstn_i) begin 
         valid       <= 1'h0;
         data_out    <= `DATA_LEN'h00;
-    end else begin 
+    end else if (mem_cen) begin 
         if (we_i) begin // write
             case (address_bus_i[`ADDR_LEN-1:8])
                 `DATA_LEN'h00: ram_0[address_bus_i[`DATA_LEN-1:0]] <= data_i;

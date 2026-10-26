@@ -3,12 +3,18 @@
 
 module reg_file_tb;
 
-logic clk = 1'b0;
-logic rstn = 1'b0;
-logic we = 1'b0;
-logic cen = 1'b0;
-logic reg_address = 4'b0;
-logic [`DATA_LEN-1:0] data_inout = `DATA_LEN'b0;
+logic clk = 0;
+logic rstn = 0;
+logic we = 0;
+logic cen = 0;
+logic [3:0] reg_address = 4'h0;
+wire [`DATA_LEN-1:0] data_inout;
+
+logic [`DATA_LEN-1:0] tb_data_inout = `DATA_LEN'h0;
+logic [`DATA_LEN-1:0] read_data = `DATA_LEN'h0;
+logic tb_data_oe = 1'b0;
+
+assign data_inout = tb_data_oe ? tb_data_inout : `DATA_LEN'bz;
 
 int errors = 0;
 
@@ -29,13 +35,51 @@ task init;
 endtask
 
 task readReg;
+input logic [3:0] address;
+output logic [`DATA_LEN-1:0] data_o;
+
+    @(negedge clk);
+    cen = 1'b1;
+    we = 1'b0;    
+    tb_data_oe = 1'b0;    
+    reg_address = address;
+
+    @(posedge clk);
+    #1;
+
+    data_o = data_inout;
+    cen = 1'b0;
+
+    $display("READ FROM REG: %d: 0x%02H", address, data_o);
 endtask
+
 task writeReg;
+input logic [3:0] address;
+input logic [`DATA_LEN-1:0] data_i;
+
+    @(negedge clk);
+    cen = 1'b1;
+    we = 1'b1;    
+    tb_data_oe = 1'b1;    
+    reg_address = address;
+    tb_data_inout = data_i;    
+    
+    @(posedge clk);
+    #1;
+    
+    cen = 1'b0;
+    tb_data_oe = 1'b0;  
+
+    $display("WRITE TO REG: %d: 0x%02H", address, data_i);
 endtask
 
 always #1 clk = ~clk;
 initial begin 
     init;
+    writeReg(4'h8, 8'h55);
+    writeReg(4'hA, 8'h66);
+    readReg(4'h8, read_data);
+    readReg(4'hA, read_data);
 
     passFail("REGISTER FILE", errors);
     $finish;
