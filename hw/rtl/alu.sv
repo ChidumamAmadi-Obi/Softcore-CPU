@@ -48,12 +48,12 @@ always @(posedge sys_clk_i) begin
     end
 end
 assign z_flag   = full_result[`DATA_LEN-1:0] == `DATA_LEN'h00;
-assign c_flag   = is_add || is_mul ? full_result > `FULL_RESULT_LEN'h00FF
+assign c_flag   = is_add || is_mul ? full_result > MAX_FULL_RES
                 : is_sub           ? b > a
                 : 1'b0; // no carry for division or logical ops
 assign o_flag   = is_add  ? (a[`DATA_LEN-1] == b[`DATA_LEN-1] ) && (full_result[`DATA_LEN-1] != a[`DATA_LEN-1]) 
                 : is_sub  ? (a[`DATA_LEN-1] != b[`DATA_LEN-1] ) && (full_result[`DATA_LEN-1] != a[`DATA_LEN-1]) 
-                : is_mul  ? full_result > `FULL_RESULT_LEN'h00FF
+                : is_mul  ? full_result > MAX_FULL_RES
                 : 1'b0; // no overflow for division or logical ops
 assign n_flag   = is_ari  ? full_result[`DATA_LEN-1] : 1'b0;
 

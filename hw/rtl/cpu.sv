@@ -83,7 +83,7 @@ reg_file reg_file_io(
     .sys_rstn_i(sys_rstn_i),
     .we_i(),
     .cen_i(),
-    .reg_address(),
+    .reg_address_i(),
     .data_io());
 
 alu alu_io(

@@ -16,9 +16,8 @@
     `define RAM_3_FILE_PATH "hex/ram_3.hex"
 `endif 
 
+// bit lengths andn widths
 `define MEM_BANK_LEN 256
-
-// bit lengths
 `define ADDR_LEN 16 // bit length of address
 `define DATA_LEN 8  
 `define FULL_RESULT_LEN 16
@@ -28,9 +27,10 @@
 `define OUT_PORT_1_LEN 8
 `define OUT_PORT_LEN 16
 
-parameter MAX_OPERAND = 8'hFF;
-parameter MIN_OPERAND = 8'h00;
-parameter MAX_ADDR_MEM = 16'h0400;
+parameter MAX_FULL_RES = `FULL_RESULT_LEN'h00FF;
+parameter MAX_OPERAND = `DATA_LEN'hFF;
+parameter MIN_OPERAND = `DATA_LEN'h00;
+parameter MAX_ADDR_MEM = `ADDR_LEN'h0400;
 
 parameter MEM_CEN = 6'h00;
 parameter PERIPH_CEN = 6'h01;
@@ -41,7 +41,6 @@ typedef enum logic [15:0] {
     OUT_PORT_0 = 16'h0401,
     OUT_PORT_1 = 16'h0402
 } peripheral_address;
-
 
 // control unit states
 typedef enum logic [2:0] { 
