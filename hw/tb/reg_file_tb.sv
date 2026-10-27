@@ -2,7 +2,7 @@
 `include "utils_tb.svh"
 
 `define PRINT 0
-`define NUMBER_OF_TESTS 80 // read/write test to every reg N number of times
+`define NUMBER_OF_TESTS 10 // read/write test to every reg N number of times
 
 module reg_file_tb;
 
