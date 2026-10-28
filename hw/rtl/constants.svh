@@ -27,6 +27,9 @@
 `define OUT_PORT_1_LEN 8
 `define OUT_PORT_LEN 16
 
+`define MAX_INST_BYTES 4
+`define MAX_NO_OPERANDS 3
+
 parameter MAX_FULL_RES = `FULL_RESULT_LEN'h00FF;
 parameter MAX_OPERAND = `DATA_LEN'hFF;
 parameter MIN_OPERAND = `DATA_LEN'h00;
@@ -34,6 +37,13 @@ parameter MAX_ADDR_MEM = `ADDR_LEN'h0400;
 
 parameter MEM_CEN = 6'h00;
 parameter PERIPH_CEN = 6'h01;
+
+// status register bits
+parameter RUN_BIT = 4'd7;
+parameter ZRO_BIT = 8'b00001000;
+parameter OVF_BIT = 8'b00000100;
+parameter CRY_BIT = 8'b00000010;
+parameter NEG_BIT = 8'b00000001;
 
 // addresses for memory mapped peripherals
 typedef enum logic [15:0] { 
@@ -44,11 +54,18 @@ typedef enum logic [15:0] {
 
 // control unit states
 typedef enum logic [2:0] { 
-    NONE,
-    FETCH,
-    DECODE,
-    EXECUTE
+    CPU_NONE,
+    CPU_FETCH,
+    CPU_DECODE,
+    CPU_EXECUTE
 } cpu_states;
+
+typedef enum logic [2:0] {
+    F_IDLE,
+    F_SEND_ADDR,
+    F_GET_DATA,
+    F_DONE
+} fetch_states;
 
 // ISA
 typedef enum logic [7:0] { 
