@@ -1,10 +1,10 @@
 `include "constants.svh"
 
 module top (
-    input logic sys_clk_i,
-    input logic sys_rstn_i,
+    input logic                      sys_clk_i,
+    input logic                      sys_rstn_i,
 
-    output logic [5:0] led_arr_o,
+    output logic [5:0]               led_arr_o,
     output logic [`OUT_PORT_LEN-1:0] output_port_o);
 
 /*
@@ -16,13 +16,14 @@ wire [`DATA_LEN-1:0] data_bus_io;
 /*
 * memory control 
 */
-wire req, ack;
-wire mem_we_io;
-wire mem_valid;
-wire mem_data_bus_wen = (!mem_we_io && mem_valid && (address_bus_io[`ADDR_LEN-1:10] == MEM_CEN));
 logic [`DATA_LEN-1:0] mem_data_i, mem_data_o;
+wire                  mem_data_bus_wen;
+wire                  req, ack;
+wire                  mem_we_io;
+wire                  mem_valid;
 
-assign data_bus_io = mem_data_bus_wen ? mem_data_o : `DATA_LEN'bz;
+assign mem_data_bus_wen = (!mem_we_io && mem_valid && (address_bus_io[`ADDR_LEN-1:10] == MEM_CEN));
+assign data_bus_io      = mem_data_bus_wen ? mem_data_o : `DATA_LEN'bz;
 
 always @(posedge sys_clk_i) begin 
     if (!sys_rstn_i || !mem_we_io) begin 

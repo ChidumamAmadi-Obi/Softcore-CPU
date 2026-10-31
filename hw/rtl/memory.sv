@@ -1,15 +1,15 @@
 `include "constants.svh"
 
 module memory (
-    input logic sys_clk_i,
-    input logic sys_rstn_i,
-    input logic req_i,
-    input logic [`ADDR_LEN-1:0] address_bus_i,
-    input logic we_i, // write enable 
-    input logic [`DATA_LEN-1:0] data_i,
+    input logic                  sys_clk_i,
+    input logic                  sys_rstn_i,
+    input logic                  req_i,
+    input logic  [`ADDR_LEN-1:0] address_bus_i,
+    input logic                  we_i, // write enable 
+    input logic  [`DATA_LEN-1:0] data_i,
     output logic [`DATA_LEN-1:0] data_o,
-    output logic ack_o,
-    output logic valid_o
+    output logic                 ack_o,
+    output logic                 valid_o
     );
 
 logic [`DATA_LEN-1:0] ram_0 [`MEM_BANK_LEN-1:0];
@@ -17,9 +17,9 @@ logic [`DATA_LEN-1:0] ram_1 [`MEM_BANK_LEN-1:0];
 logic [`DATA_LEN-1:0] ram_2 [`MEM_BANK_LEN-1:0];
 logic [`DATA_LEN-1:0] ram_3 [`MEM_BANK_LEN-1:0];
 
-wire mem_cen = (address_bus_i[`ADDR_LEN-1:10] == MEM_CEN) ? 1'b1 : 1'b0;
 logic [`DATA_LEN-1:0] data_out;
-logic valid;
+logic                 valid;
+wire                  mem_cen;
 
 initial begin 
     for (int i=0; i<`MEM_BANK_LEN; i++) begin 
@@ -60,13 +60,11 @@ always @(posedge sys_clk_i) begin
                 default: begin data_out <= `DATA_LEN'h00; valid <= 1'b0; end
             endcase
         end   
-        if (req_i && !ack_o) begin 
-            ack_o <= 1'b1;
-        end else if (ack_o) begin 
-            ack_o <= 1'b0;
-        end
+        if (req_i && !ack_o) begin ack_o <= 1'b1; end 
+        else if (ack_o)      begin ack_o <= 1'b0; end
     end
 end
-assign data_o = data_out;
+assign mem_cen = (address_bus_i[`ADDR_LEN-1:10] == MEM_CEN) ? 1'b1 : 1'b0;
+assign data_o  = data_out;
 assign valid_o = valid;
 endmodule

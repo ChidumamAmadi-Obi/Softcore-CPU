@@ -1,10 +1,10 @@
 `include "constants.svh"
 
 module no_bytes(
-    input opcode opcode_i,
-    input logic cen_i,
-    output logic [3:0] no_bytes_o,
-    output logic rdy_o);
+    input opcode        opcode_i,
+    input  logic        cen_i,
+    output logic [3:0]  no_bytes_o,
+    output logic        rdy_o);
 always @* begin 
     if (cen_i) begin 
         case(opcode_i)
@@ -38,17 +38,17 @@ end
 endmodule
 
 module cpu(
-    input logic sys_clk_i,
-    input logic sys_rstn_i,
-    input logic ack_i,
-    inout logic [`DATA_LEN-1:0] data_bus_io,
+    input logic                  sys_clk_i,
+    input logic                  sys_rstn_i,
+    input logic                  ack_i,
+    inout logic  [`DATA_LEN-1:0] data_bus_io,
     output logic [`ADDR_LEN-1:0] address_bus_o,
-    output logic mem_we_o,
-    output logic req_o);
+    output logic                 mem_we_o,
+    output logic                 req_o);
 
 logic [`DATA_LEN-1:0] ir [`MAX_INST_BYTES-1:0];
 logic [`ADDR_LEN-1:0] pc;
-logic [7:0] sr; // status register
+logic [7:0]           sr; // status register
 
 logic [`ADDR_LEN-1:0] address_bus_reg;
 logic [`DATA_LEN-1:0] data_i, data_o;
@@ -62,13 +62,13 @@ logic       inst_byte_en,  inst_byte_rdy;
 logic [3:0] inst_byte_cnt, inst_byte_no;
 
 fetch_states fetch_state;
-cpu_states cpu_state;
+cpu_states   cpu_state;
 
 // cpu state machine 3 stage
 always @(posedge sys_clk_i) begin 
     if (!sys_rstn_i) begin 
         for (int i=0; i<`MAX_INST_BYTES; i++) begin 
-            ir[i] <= `DATA_LEN'h00;
+            ir[i]        <= `DATA_LEN'h00;
         end
         pc               <= `ADDR_LEN'h0;
         address_bus_reg  <= `ADDR_LEN'h0;
@@ -76,90 +76,89 @@ always @(posedge sys_clk_i) begin
         inst_byte_cnt    <= 3'h0;
         inst_byte_en     <= 1'b0;
         mem_we_o         <= 1'b0;
-        req_o        <= 1'b0;
+        req_o            <= 1'b0;
 
         cpu_state        <= CPU_FETCH;
         fetch_state      <= F_IDLE;
-
     end else begin 
         case(cpu_state)
             CPU_NONE: begin end
             CPU_FETCH: begin 
                 case(fetch_state)
-                F_IDLE: begin 
-                    inst_byte_cnt    <= 4'h0;
-                    inst_byte_en     <= 1'b0;
-                    mem_we_o         <= 1'b0;
-                    req_o        <= 1'b0;
-                    if (sr[RUN_BIT]) begin
-                        fetch_state <= F_SEND_ADDR;
-                    end else begin
-                        fetch_state <= F_IDLE;
-                    end               
-                end
-
-                F_SEND_ADDR: begin 
-                    if (!inst_byte_en) begin 
-                        address_bus_reg <= pc;
-                        req_o       <= 1'b1;
-                        if (ack_i) begin 
-                            req_o       <= 1'b0;
-                            fetch_state <= F_GET_OPCODE;
-                        end else begin 
-                            fetch_state <= F_SEND_ADDR;
-                        end
-                    end else if (!inst_byte_rdy) begin // invalid opcode
-                        sr[RUN_BIT]      <= 1'b0;
-                        inst_byte_en     <= 1'b0;
+                    F_IDLE: begin 
                         inst_byte_cnt    <= 4'h0;
+                        inst_byte_en     <= 1'b0;
+                        mem_we_o         <= 1'b0;
                         req_o            <= 1'b0;
-                        fetch_state      <= F_IDLE;                        
-                    end else if (inst_byte_cnt == inst_byte_no) begin // got last inst byte
-                        req_o            <= 1'b0;
-                        fetch_state      <= F_DONE;
-                    end else begin // get next inst byte
-                        address_bus_reg <= pc;
-                        req_o       <= 1'b1;
-                        if (ack_i) begin 
-                            req_o       <= 1'b0;
-                            fetch_state <= F_GET_OPERANDS;
-                        end else begin 
-                            fetch_state <= F_SEND_ADDR;
+                        if (sr[RUN_BIT]) begin
+                            fetch_state  <= F_SEND_ADDR;
+                        end else begin
+                            fetch_state  <= F_IDLE;
+                        end               
+                    end
+
+                    F_SEND_ADDR: begin 
+                        if (!inst_byte_en) begin 
+                            address_bus_reg  <= pc;
+                            req_o            <= 1'b1;
+                            if (ack_i) begin 
+                                req_o        <= 1'b0;
+                                fetch_state  <= F_GET_OPCODE;
+                            end else begin 
+                                fetch_state  <= F_SEND_ADDR;
+                            end
+                        end else if (!inst_byte_rdy) begin // invalid opcode
+                            sr[RUN_BIT]      <= 1'b0;
+                            inst_byte_en     <= 1'b0;
+                            inst_byte_cnt    <= 4'h0;
+                            req_o            <= 1'b0;
+                            fetch_state      <= F_IDLE;                        
+                        end else if (inst_byte_cnt == inst_byte_no) begin // got last inst byte
+                            req_o            <= 1'b0;
+                            fetch_state      <= F_DONE;
+                        end else begin // get next inst byte
+                            address_bus_reg  <= pc;
+                            req_o            <= 1'b1;
+                            if (ack_i) begin 
+                                req_o        <= 1'b0;
+                                fetch_state  <= F_GET_OPERANDS;
+                            end else begin 
+                                fetch_state  <= F_SEND_ADDR;
+                            end
                         end
                     end
-                end
 
-                F_GET_OPCODE: begin 
-                    inst_byte_en  <= 1'b1;
-                    ir[0]         <= data_i;
-                    inst_byte_cnt <= 4'h1;
-                    pc            <= pc + 1;   
-                    fetch_state   <= F_SEND_ADDR;
-                end
+                    F_GET_OPCODE: begin 
+                        inst_byte_en  <= 1'b1;
+                        ir[0]         <= data_i;
+                        inst_byte_cnt <= 4'h1;
+                        pc            <= pc + 1;   
+                        fetch_state   <= F_SEND_ADDR;
+                    end
 
-                F_GET_OPERANDS: begin 
-                    ir[inst_byte_cnt] <= data_i;
-                    inst_byte_cnt     <= inst_byte_cnt + 1;
-                    pc                <= pc + 1;  
-                    fetch_state       <= F_SEND_ADDR;
-                end
+                    F_GET_OPERANDS: begin 
+                        ir[inst_byte_cnt] <= data_i;
+                        inst_byte_cnt     <= inst_byte_cnt + 1;
+                        pc                <= pc + 1;  
+                        fetch_state       <= F_SEND_ADDR;
+                    end
 
-                F_DONE: begin 
-                    inst_byte_cnt <= 4'h0;
-                    inst_byte_en  <= 1'b0;
-                    fetch_state   <= F_IDLE;
-                    cpu_state     <= CPU_DECODE;
-                end
+                    F_DONE: begin 
+                        inst_byte_cnt <= 4'h0;
+                        inst_byte_en  <= 1'b0;
+                        fetch_state   <= F_IDLE;
+                        cpu_state     <= CPU_DECODE;
+                    end
 
-                default: begin 
-                    req_o   <= 1'b0;
-                    fetch_state <= F_IDLE; 
-                end
+                    default: begin 
+                        req_o       <= 1'b0;
+                        fetch_state <= F_IDLE; 
+                    end
                 endcase
             end
             CPU_DECODE:  begin cpu_state <= CPU_NONE; end
             CPU_EXECUTE: begin cpu_state <= CPU_NONE; end
-            default: begin cpu_state <= CPU_NONE; end
+            default:     begin cpu_state <= CPU_NONE; end
         endcase
     end
 end
@@ -170,6 +169,8 @@ no_bytes no_bytes_c(
     .no_bytes_o(inst_byte_no),
     .rdy_o(inst_byte_rdy));
 
+
+
 reg_file reg_file_io(
     .sys_clk_i(sys_clk_i),
     .sys_rstn_i(sys_rstn_i),
@@ -177,7 +178,6 @@ reg_file reg_file_io(
     .cen_i(),
     .reg_address_i(),
     .data_io());
-
 alu alu_io(
     .sys_clk_i(sys_clk_i),
     .sys_rstn_i(sys_rstn_i),

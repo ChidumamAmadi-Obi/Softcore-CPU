@@ -1,21 +1,21 @@
 `include "constants.svh"
 
 module alu(
-    input logic sys_clk_i,
-    input logic sys_rstn_i,
-    input logic cen_i,
-    input opcode opcode_i,
-    input logic [`DATA_LEN-1:0] operand_a_i,
-    input logic [`DATA_LEN-1:0] operand_b_i,
+    input logic                  sys_clk_i,
+    input logic                  sys_rstn_i,
+    input logic                  cen_i,
+    input opcode                 opcode_i,
+    input logic [`DATA_LEN-1:0]  operand_a_i,
+    input logic [`DATA_LEN-1:0]  operand_b_i,
 
     output logic [`DATA_LEN-1:0] result_o,
-    output logic [3:0] alu_flags_o, // output all alu flags
-    output logic valid_o);
+    output logic [3:0]           alu_flags_o, // output all alu flags
+    output logic                 valid_o);
 
 logic [`FULL_RESULT_LEN-1:0] full_result;
-logic [`DATA_LEN-1:0] a, b;
-logic valid;
-logic z_flag, o_flag, c_flag, n_flag;
+logic [`DATA_LEN-1:0]        a, b;
+logic                        valid;
+logic                        z_flag, o_flag, c_flag, n_flag;
 
 wire is_add  = (opcode_i == OP_ADD) || (opcode_i == OP_ADDI);
 wire is_sub  = (opcode_i == OP_SUB) || (opcode_i == OP_SUBI);

@@ -9,7 +9,8 @@ TB_DISABLE_WARNING ?=  $(RTL_DISABLE_WARNING) -Wno-WIDTHTRUNC
 TB_FLAGS = --binary --timing --assert --trace 
 
 # specify log file for tbs if needed
-LOG_FILE ?= verilator_tb_log.txt
+LOG_DIR = logs
+LOG_FILE ?= verilator_tb_log
 
 # source files ***********************
 RTL_SRC = $(PROJ)
@@ -34,6 +35,7 @@ help: # shows message
 	@echo  MAKEFILE TARGETS:
 	@echo  - lint PROJ=source_file_name
 	@echo  - run-tb PROJ=source_file_name
+	@echo  - run-regression 'look at regression.sh for details'
 	@echo  - clean
 	@echo  - help
 
@@ -45,7 +47,10 @@ lint: # lint rtl modules
 
 run-tb: # run tbs
 	verilator $(TB_FLAGS) -I$(RTL_DIR) -I$(TB_DIR) $(TB_DISABLE_WARNING) $(RTL_DIR)/$(RTL_SRC).sv $(TB_DIR)/$(TB_SRC).sv --top $(TB_SRC)
-	$(TB_EXEC) | tee $(LOG_FILE)
+	$(TB_EXEC) | tee $(LOG_DIR)/$(LOG_FILE).txt
+
+run-regression:
+	./regression.sh
 
 clean: # remove generated stuff
 	rm $(OBJ_DIR)/*

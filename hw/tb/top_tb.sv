@@ -1,4 +1,5 @@
 `include "constants.svh"
+`include "utils_tb.svh"
 
 module top_tb;
 
@@ -6,6 +7,8 @@ logic clk = 0;
 logic rstn = 0;
 logic [5:0] led_array;
 logic [`OUT_PORT_LEN-1:0] output_port;
+
+int errors=0;
 
 top top_dut(
     .sys_clk_i(clk),
@@ -25,9 +28,8 @@ always #1 clk = ~clk;
 initial begin 
     init;
     #(50); // let clock tick away and look at regs through waveforms first
-    /* NOTES
-    first byte of program is read immediately but it stops there
-    */
+
+    passFail("TOP", errors);
     $finish;
 end
 endmodule
