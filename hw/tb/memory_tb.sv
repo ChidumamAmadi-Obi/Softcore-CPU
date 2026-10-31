@@ -11,6 +11,8 @@ logic        we = 0;
 logic [7:0]  data_in = 8'h00;
 logic [7:0]  data_out;
 logic        valid;
+logic        req;
+logic        ack = 0;
 
 // test signals
 logic [15:0] test_address;
@@ -25,10 +27,12 @@ logic [7:0] test_ram_3 [255:0];
 memory memory_dut (
     .sys_clk_i(clk),
     .sys_rstn_i(rstn),
+    .req_i(req),
     .address_bus_i(address),
     .we_i(we),
     .data_i(data_in),
     .data_o(data_out),
+    .ack_o(ack),
     .valid_o(valid));
 
 task init;
@@ -46,13 +50,14 @@ output logic [7:0] data;
     @(negedge clk);
     address = {bank,addr};
     we      = 1'b0;
+    req     = 1'b1;
 
-    @(posedge clk);   // mem registers the read here
+    @(posedge ack);   // mem registers the read here
     #1;          
 
     data = data_out;     
 
-    $display("READ: 0x%02h, BANK: %d, ADDR: 0x%02h", data_out, bank, addr);
+    //$display("READ: 0x%02h, BANK: %d, ADDR: 0x%02h", data_out, bank, addr);
 endtask
 
 task writeRam;
@@ -64,8 +69,9 @@ input logic [7:0] data;
     address = {bank,addr};
     data_in = data;
     we      = 1'b1;
+    req     = 1'b1;
 
-    @(posedge clk);
+    @(posedge ack);
     #1;               
 
     //$display("WROTE: 0x%02h, BANK: %d, ADDR: 0x%02h", data, bank, addr);
@@ -81,8 +87,6 @@ initial begin
     rw_errors = 0;
     loading_errors = 0;
 
-    readRam(8'h00, 8'h01, read_data);
-/*
     // verify program loading into BRAM works
     $readmemh(`RAM_0_FILE_PATH, test_ram_0);
     $readmemh(`RAM_1_FILE_PATH, test_ram_1);
@@ -145,7 +149,7 @@ initial begin
     end
 
     passFail("MEMORY CONTROLLER",(rw_errors || loading_errors));
-*/
+
     $finish;
 end
 endmodule

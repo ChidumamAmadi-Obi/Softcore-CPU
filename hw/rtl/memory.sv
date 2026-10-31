@@ -3,10 +3,12 @@
 module memory (
     input logic sys_clk_i,
     input logic sys_rstn_i,
+    input logic req_i,
     input logic [`ADDR_LEN-1:0] address_bus_i,
     input logic we_i, // write enable 
     input logic [`DATA_LEN-1:0] data_i,
     output logic [`DATA_LEN-1:0] data_o,
+    output logic ack_o,
     output logic valid_o
     );
 
@@ -37,6 +39,7 @@ always @(posedge sys_clk_i) begin
     if (!sys_rstn_i) begin 
         valid       <= 1'h0;
         data_out    <= `DATA_LEN'h00;
+        ack_o       <= 1'b0;
     end else if (mem_cen) begin 
         if (we_i) begin // write
             case (address_bus_i[`ADDR_LEN-1:8])
@@ -56,7 +59,12 @@ always @(posedge sys_clk_i) begin
                 8'h03: begin data_out <= ram_3[address_bus_i[`DATA_LEN-1:0]]; valid <= 1'b1; end
                 default: begin data_out <= `DATA_LEN'h00; valid <= 1'b0; end
             endcase
-        end        
+        end   
+        if (req_i && !ack_o) begin 
+            ack_o <= 1'b1;
+        end else if (ack_o) begin 
+            ack_o <= 1'b0;
+        end
     end
 end
 assign data_o = data_out;

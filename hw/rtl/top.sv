@@ -16,6 +16,7 @@ wire [`DATA_LEN-1:0] data_bus_io;
 /*
 * memory control 
 */
+wire req, ack;
 wire mem_we_io;
 wire mem_valid;
 wire mem_data_bus_wen = (!mem_we_io && mem_valid && (address_bus_io[`ADDR_LEN-1:10] == MEM_CEN));
@@ -37,18 +38,22 @@ end
 cpu cpu_io(
     .sys_clk_i(sys_clk_i),
     .sys_rstn_i(sys_rstn_i),
+    .ack_i(ack),
     .data_bus_io(data_bus_io),
     .address_bus_o(address_bus_io),
-    .mem_we_o(mem_we_io)
+    .mem_we_o(mem_we_io),
+    .req_o(req)
 );
 
 memory memory_io (
     .sys_clk_i(sys_clk_i),
     .sys_rstn_i(sys_rstn_i),
+    .req_i(req),
     .address_bus_i(address_bus_io),
     .we_i(mem_we_io),
     .data_i(mem_data_i),
     .data_o(mem_data_o),
+    .ack_o(ack),
     .valid_o(mem_valid));
 
 periphs periphs_o (
