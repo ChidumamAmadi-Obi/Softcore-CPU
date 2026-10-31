@@ -8,7 +8,7 @@ module top (
     output logic [`OUT_PORT_LEN-1:0] output_port_o);
 
 /*
-* cpu internal bus
+* cpu internal buses
 */
 wire [`ADDR_LEN-1:0] address_bus_io;
 wire [`DATA_LEN-1:0] data_bus_io;

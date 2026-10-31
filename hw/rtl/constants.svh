@@ -39,7 +39,7 @@ parameter MEM_CEN = 6'h00;
 parameter PERIPH_CEN = 6'h01;
 
 // status register bits
-parameter RUN_BIT = 4'd7;
+parameter RUN_BIT = 8'd7;
 parameter ZRO_BIT = 8'b00001000;
 parameter OVF_BIT = 8'b00000100;
 parameter CRY_BIT = 8'b00000010;
@@ -63,7 +63,8 @@ typedef enum logic [2:0] {
 typedef enum logic [2:0] {
     F_IDLE,
     F_SEND_ADDR,
-    F_GET_DATA,
+    F_GET_OPCODE,
+    F_GET_OPERANDS,
     F_DONE
 } fetch_states;
 

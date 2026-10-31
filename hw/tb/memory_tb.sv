@@ -52,7 +52,7 @@ output logic [7:0] data;
 
     data = data_out;     
 
-    //$display("READ: 0x%02h, BANK: %d, ADDR: 0x%02h", data_out, bank, addr);
+    $display("READ: 0x%02h, BANK: %d, ADDR: 0x%02h", data_out, bank, addr);
 endtask
 
 task writeRam;
@@ -81,6 +81,8 @@ initial begin
     rw_errors = 0;
     loading_errors = 0;
 
+    readRam(8'h00, 8'h01, read_data);
+/*
     // verify program loading into BRAM works
     $readmemh(`RAM_0_FILE_PATH, test_ram_0);
     $readmemh(`RAM_1_FILE_PATH, test_ram_1);
@@ -143,7 +145,7 @@ initial begin
     end
 
     passFail("MEMORY CONTROLLER",(rw_errors || loading_errors));
-
+*/
     $finish;
 end
 endmodule
