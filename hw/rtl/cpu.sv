@@ -47,15 +47,10 @@ module cpu(
     output logic                 req_o);
 
 logic [`DATA_LEN-1:0] ir [`MAX_INST_BYTES-1:0];
-logic [`ADDR_LEN-1:0] pc;
+logic [`ADDR_LEN-1:0] pc, ninst;
 logic [7:0]           sr; // status register
-
 logic [`ADDR_LEN-1:0] address_bus_reg;
 logic [`DATA_LEN-1:0] data_i, data_o;
-
-assign address_bus_o = address_bus_reg; 
-assign data_i        = !mem_we_o ? data_bus_io : `DATA_LEN'bz;
-assign data_o        =  mem_we_o ? data_bus_io : `DATA_LEN'bz;
 
 // fetch signals
 logic       inst_byte_en,  inst_byte_rdy;
@@ -64,6 +59,10 @@ logic [3:0] inst_byte_cnt, inst_byte_no;
 fetch_states fetch_state;
 cpu_states   cpu_state;
 
+assign address_bus_o = address_bus_reg; 
+assign data_i        = !mem_we_o ? data_bus_io : `DATA_LEN'bz;
+assign data_o        =  mem_we_o ? data_bus_io : `DATA_LEN'bz;
+
 // cpu state machine 3 stage
 always @(posedge sys_clk_i) begin 
     if (!sys_rstn_i) begin 
@@ -71,6 +70,7 @@ always @(posedge sys_clk_i) begin
             ir[i]        <= `DATA_LEN'h00;
         end
         pc               <= `ADDR_LEN'h0;
+        ninst            <= `ADDR_LEN'h0;
         address_bus_reg  <= `ADDR_LEN'h0;
         sr               <= 8'h80;
         inst_byte_cnt    <= 3'h0;
@@ -82,7 +82,8 @@ always @(posedge sys_clk_i) begin
         fetch_state      <= F_IDLE;
     end else begin 
         case(cpu_state)
-            CPU_NONE: begin end
+            CPU_IDLE: begin 
+            end
             CPU_FETCH: begin 
                 case(fetch_state)
                     F_IDLE: begin 
@@ -93,6 +94,7 @@ always @(posedge sys_clk_i) begin
                         if (sr[RUN_BIT]) begin
                             fetch_state  <= F_SEND_ADDR;
                         end else begin
+                            cpu_state    <= CPU_IDLE;
                             fetch_state  <= F_IDLE;
                         end               
                     end
@@ -156,9 +158,61 @@ always @(posedge sys_clk_i) begin
                     end
                 endcase
             end
-            CPU_DECODE:  begin cpu_state <= CPU_NONE; end
-            CPU_EXECUTE: begin cpu_state <= CPU_NONE; end
-            default:     begin cpu_state <= CPU_NONE; end
+
+            CPU_DECODE: begin 
+                case(ir[0])
+                    OP_NOP: cpu_state <= CPU_EXECUTE;        
+                    OP_HALT: begin 
+                        sr[RUN_BIT] <= 1'b0;
+                        cpu_state   <= CPU_IDLE;
+                    end
+
+                    default: begin 
+                        cpu_state <= CPU_EXECUTE; // skip to next state for now
+                    end
+                endcase
+            end
+                
+            CPU_EXECUTE: begin 
+                case(ir[0])
+                    OP_NOP: cpu_state <= CPU_FETCH; 
+                    OP_HALT: begin 
+                        sr[RUN_BIT] <= 1'b0;
+                        cpu_state   <= CPU_IDLE; 
+                    end
+                    OP_JMP: begin 
+                        pc <= {ir[1], ir[2]}; 
+                        cpu_state <= CPU_FETCH;
+                    end
+                    OP_RET: begin 
+                        pc <= ninst; 
+                        cpu_state <= CPU_FETCH;
+                    end
+                    OP_JMP_ABV: begin 
+                        pc <= (!sr[ZRO_BIT] && !sr[NEG_BIT]) ? {ir[1], ir[2]} : pc; 
+                        cpu_state <= CPU_FETCH;
+                    end
+                    OP_JMP_NEG: begin 
+                        pc <=   sr[NEG_BIT]                  ? {ir[1], ir[2]} : pc; 
+                        cpu_state <= CPU_FETCH;
+                    end
+                    OP_JMP_OFW: begin 
+                        pc <=   sr[OVF_BIT]                  ? {ir[1], ir[2]} : pc; 
+                        cpu_state <= CPU_FETCH;
+                    end
+                    OP_JMP_ZRO: begin 
+                        pc <=   sr[ZRO_BIT]                  ? {ir[1], ir[2]} : pc; 
+                        cpu_state <= CPU_FETCH;
+                    end
+                    OP_CALL: begin 
+                        ninst <= pc + 1; // save location of next inst after call
+                        pc    <= {ir[1], ir[2]};
+                        cpu_state <= CPU_FETCH;
+                    end
+                    default: cpu_state <= CPU_FETCH; // skip to next state for now
+                endcase 
+            end
+            default:     begin cpu_state <= CPU_IDLE; end
         endcase
     end
 end

@@ -27,7 +27,7 @@ endtask
 always #1 clk = ~clk;
 initial begin 
     init;
-    #(50); // let clock tick away and look at regs through waveforms first
+    #(100); // let clock tick away and look at regs through waveforms first
 
     passFail("TOP", errors);
     $finish;

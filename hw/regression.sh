@@ -19,6 +19,7 @@ MODULES=(
     "reg_file"
     "top")
 
+make clean
 for MODULE in "${MODULES[@]}"; do
     echo "[ RUNNING $MODULE TEST BENCH... ]" 
     make run-tb PROJ=$MODULE LOG_FILE=$MODULE
