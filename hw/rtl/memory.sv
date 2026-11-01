@@ -41,7 +41,7 @@ always @(posedge sys_clk_i) begin
         data_out    <= `DATA_LEN'h00;
         ack_o       <= 1'b0;
     end else if (mem_cen) begin 
-        if (we_i) begin // write
+        if (we_i && req_i) begin // write
             case (address_bus_i[`ADDR_LEN-1:8])
                 `DATA_LEN'h00: ram_0[address_bus_i[`DATA_LEN-1:0]] <= data_i;
                 `DATA_LEN'h01: ram_1[address_bus_i[`DATA_LEN-1:0]] <= data_i;
@@ -51,7 +51,7 @@ always @(posedge sys_clk_i) begin
             endcase
             valid <= 1'b0;
             data_out <= `DATA_LEN'h00;
-        end else begin // read
+        end else if (req_i) begin // read
             case (address_bus_i[`ADDR_LEN-1:8])
                 8'h00: begin data_out <= ram_0[address_bus_i[`DATA_LEN-1:0]]; valid <= 1'b1; end
                 8'h01: begin data_out <= ram_1[address_bus_i[`DATA_LEN-1:0]]; valid <= 1'b1; end

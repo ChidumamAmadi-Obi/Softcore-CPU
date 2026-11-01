@@ -31,6 +31,6 @@ always @(posedge sys_clk_i) begin
 end
 
 assign register_out = !we_i ? register[reg_address_i] : `DATA_LEN'bz;
-assign data_io      = register_out;
+assign data_io      = cen_i ? register_out            : `DATA_LEN'bz;
 
 endmodule

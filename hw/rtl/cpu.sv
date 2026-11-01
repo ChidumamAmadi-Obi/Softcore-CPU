@@ -8,14 +8,18 @@ module no_bytes(
 always @* begin 
     if (cen_i) begin 
         case(opcode_i)
-            OP_ADD,  OP_SUB,  OP_MUL,  OP_AND,  OP_OR,  OP_XOR,  OP_EQU,  OP_DIV,
-            OP_ADDI, OP_SUBI, OP_MULI, OP_ANDI, OP_ORI, OP_XORI, OP_EQUI, OP_DIVI,
+            OP_ADD,  OP_SUB,  OP_MUL,  OP_AND,  
+            OP_ADDI, OP_SUBI, OP_MULI, OP_ANDI, 
+            OP_OR,  OP_XOR,  OP_EQU,  OP_DIV, 
+            OP_ORI, OP_XORI, OP_EQUI, OP_DIVI,
             OP_STR, OP_LD: begin 
                 no_bytes_o = 4'h4; 
                 rdy_o = 1'b1;
             end
 
-            OP_LDI, OP_MOV, OP_JMP, OP_JMP_ABV, OP_JMP_NEG, OP_JMP_OFW, OP_JMP_ZRO, OP_CALL: begin 
+            OP_LDI, OP_MOV, OP_JMP, OP_JMP_ABV, 
+            OP_JMP_NEG, OP_JMP_OFW, OP_JMP_ZRO, 
+            OP_CALL: begin 
                 no_bytes_o = 4'h3;
                 rdy_o = 1'b1;
             end
@@ -40,11 +44,11 @@ endmodule
 module cpu(
     input logic                  sys_clk_i,
     input logic                  sys_rstn_i,
-    input logic                  ack_i,
+    input logic                  mem_ack_i,
     inout logic  [`DATA_LEN-1:0] data_bus_io,
     output logic [`ADDR_LEN-1:0] address_bus_o,
     output logic                 mem_we_o,
-    output logic                 req_o);
+    output logic                 mem_req_o);
 
 logic [`DATA_LEN-1:0] ir [`MAX_INST_BYTES-1:0];
 logic [`ADDR_LEN-1:0] pc, ninst;
@@ -55,6 +59,12 @@ logic [`DATA_LEN-1:0] data_i, data_o;
 // fetch signals
 logic       inst_byte_en,  inst_byte_rdy;
 logic [3:0] inst_byte_cnt, inst_byte_no;
+
+// regfile signals
+
+logic [3:0]           reg_file_address;
+logic                 reg_file_cen, reg_file_we;
+wire  [`DATA_LEN-1:0] reg_file_data;
 
 fetch_states fetch_state;
 cpu_states   cpu_state;
@@ -69,14 +79,20 @@ always @(posedge sys_clk_i) begin
         for (int i=0; i<`MAX_INST_BYTES; i++) begin 
             ir[i]        <= `DATA_LEN'h00;
         end
+
         pc               <= `ADDR_LEN'h0;
         ninst            <= `ADDR_LEN'h0;
         address_bus_reg  <= `ADDR_LEN'h0;
-        sr               <= 8'h80;
+        sr               <= 8'h80; // start with RUN_BIT set
+        mem_we_o         <= 1'b0;
+        mem_req_o            <= 1'b0;       
+
         inst_byte_cnt    <= 3'h0;
         inst_byte_en     <= 1'b0;
-        mem_we_o         <= 1'b0;
-        req_o            <= 1'b0;
+
+        reg_file_cen     <= 1'b0;
+        reg_file_we      <= 1'b0;
+        reg_file_address <= 4'H0;
 
         cpu_state        <= CPU_FETCH;
         fetch_state      <= F_IDLE;
@@ -90,7 +106,7 @@ always @(posedge sys_clk_i) begin
                         inst_byte_cnt    <= 4'h0;
                         inst_byte_en     <= 1'b0;
                         mem_we_o         <= 1'b0;
-                        req_o            <= 1'b0;
+                        mem_req_o            <= 1'b0;
                         if (sr[RUN_BIT]) begin
                             fetch_state  <= F_SEND_ADDR;
                         end else begin
@@ -102,9 +118,9 @@ always @(posedge sys_clk_i) begin
                     F_SEND_ADDR: begin 
                         if (!inst_byte_en) begin 
                             address_bus_reg  <= pc;
-                            req_o            <= 1'b1;
-                            if (ack_i) begin 
-                                req_o        <= 1'b0;
+                            mem_req_o            <= 1'b1;
+                            if (mem_ack_i) begin 
+                                mem_req_o        <= 1'b0;
                                 fetch_state  <= F_GET_OPCODE;
                             end else begin 
                                 fetch_state  <= F_SEND_ADDR;
@@ -113,16 +129,16 @@ always @(posedge sys_clk_i) begin
                             sr[RUN_BIT]      <= 1'b0;
                             inst_byte_en     <= 1'b0;
                             inst_byte_cnt    <= 4'h0;
-                            req_o            <= 1'b0;
+                            mem_req_o            <= 1'b0;
                             fetch_state      <= F_IDLE;                        
                         end else if (inst_byte_cnt == inst_byte_no) begin // got last inst byte
-                            req_o            <= 1'b0;
+                            mem_req_o            <= 1'b0;
                             fetch_state      <= F_DONE;
                         end else begin // get next inst byte
                             address_bus_reg  <= pc;
-                            req_o            <= 1'b1;
-                            if (ack_i) begin 
-                                req_o        <= 1'b0;
+                            mem_req_o            <= 1'b1;
+                            if (mem_ack_i) begin 
+                                mem_req_o        <= 1'b0;
                                 fetch_state  <= F_GET_OPERANDS;
                             end else begin 
                                 fetch_state  <= F_SEND_ADDR;
@@ -153,7 +169,7 @@ always @(posedge sys_clk_i) begin
                     end
 
                     default: begin 
-                        req_o       <= 1'b0;
+                        mem_req_o       <= 1'b0;
                         fetch_state <= F_IDLE; 
                     end
                 endcase
@@ -161,12 +177,15 @@ always @(posedge sys_clk_i) begin
 
             CPU_DECODE: begin 
                 case(ir[0])
-                    OP_NOP: cpu_state <= CPU_EXECUTE;        
-                    OP_HALT: begin 
-                        sr[RUN_BIT] <= 1'b0;
-                        cpu_state   <= CPU_IDLE;
-                    end
+                    OP_JMP,  OP_JMP_ABV, OP_JMP_NEG, 
+                    OP_JMP_OFW, OP_JMP_ZRO, OP_CALL,  
+                    OP_RET,  OP_NOP, OP_HALT: begin 
+                        cpu_state <= CPU_EXECUTE; // skip to execute stage
+                    end  
 
+                    OP_LDI: begin 
+                    
+                    end
                     default: begin 
                         cpu_state <= CPU_EXECUTE; // skip to next state for now
                     end
@@ -228,10 +247,10 @@ no_bytes no_bytes_c(
 reg_file reg_file_io(
     .sys_clk_i(sys_clk_i),
     .sys_rstn_i(sys_rstn_i),
-    .we_i(),
-    .cen_i(),
-    .reg_address_i(),
-    .data_io());
+    .we_i(reg_file_we),
+    .cen_i(reg_file_cen),
+    .reg_address_i(reg_file_address),
+    .data_io(reg_file_data));
 alu alu_io(
     .sys_clk_i(sys_clk_i),
     .sys_rstn_i(sys_rstn_i),

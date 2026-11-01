@@ -55,7 +55,8 @@ output logic [7:0] data;
     @(posedge ack);   // mem registers the read here
     #1;          
 
-    data = data_out;     
+    data = data_out;  
+    req     = 1'b0;   
 
     //$display("READ: 0x%02h, BANK: %d, ADDR: 0x%02h", data_out, bank, addr);
 endtask
@@ -73,6 +74,7 @@ input logic [7:0] data;
 
     @(posedge ack);
     #1;               
+    req     = 1'b0;  
 
     //$display("WROTE: 0x%02h, BANK: %d, ADDR: 0x%02h", data, bank, addr);
 endtask
@@ -120,11 +122,11 @@ initial begin
 
     // test reading and writing to each bank
     for (test_address = 16'h0000; test_address < MAX_ADDR_MEM; test_address++) begin 
-        written_data = test_address[7:0];
+        written_data = $urandom_range(MIN_OPERAND,MAX_OPERAND);
         writeRam(
             test_address[15:8],
             test_address[7:0],
-            test_address[7:0]);
+            written_data);
         readRam(
             test_address[15:8],
             test_address[7:0],

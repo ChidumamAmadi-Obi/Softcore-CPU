@@ -40,6 +40,7 @@ parameter PERIPH_CEN = 6'h01;
 
 // status register bits
 parameter RUN_BIT = 8'd7;
+parameter ERR_BIT = 8'd6; // fatal error
 parameter ZRO_BIT = 8'd3;
 parameter OVF_BIT = 8'd2;
 parameter CRY_BIT = 8'd1;

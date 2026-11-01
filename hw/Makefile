@@ -50,7 +50,7 @@ run-tb: # run tbs
 	$(TB_EXEC) | tee $(LOG_DIR)/$(LOG_FILE).txt
 
 run-regression:
-	./regression.sh
+	./regression.sh | tee $(LOG_DIR)/regression.txt
 
 clean: # remove generated stuff
 	rm $(OBJ_DIR)/*

@@ -39,11 +39,11 @@ end
 cpu cpu_io(
     .sys_clk_i(sys_clk_i),
     .sys_rstn_i(sys_rstn_i),
-    .ack_i(ack),
+    .mem_ack_i(ack),
     .data_bus_io(data_bus_io),
     .address_bus_o(address_bus_io),
     .mem_we_o(mem_we_io),
-    .req_o(req)
+    .mem_req_o(req)
 );
 
 memory memory_io (
