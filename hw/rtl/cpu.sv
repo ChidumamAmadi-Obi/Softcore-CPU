@@ -85,7 +85,7 @@ always @(posedge sys_clk_i) begin
         address_bus_reg  <= `ADDR_LEN'h0;
         sr               <= 8'h80; // start with RUN_BIT set
         mem_we_o         <= 1'b0;
-        mem_req_o            <= 1'b0;       
+        mem_req_o        <= 1'b0;       
 
         inst_byte_cnt    <= 3'h0;
         inst_byte_en     <= 1'b0;

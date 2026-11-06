@@ -10,6 +10,8 @@ PASSED_TESTS=()
 FAILED_TESTS=()
 SKIPPED_TESTS=()
 
+CURRENT_DATA_TIME=`date +"%d-%m-%Y %T"`
+
 MODULES=(
     "alu"
     # "control_unit"
@@ -56,3 +58,4 @@ echo "  FAILED:  $FAILED/$TESTS"
 echo "  SKIPPED: $SKIPPED/$TESTS"
 echo "  PASSED:  $PASSED/$TESTS"
 echo "[ ========================== ]"
+echo "  T:${CURRENT_DATA_TIME}"
