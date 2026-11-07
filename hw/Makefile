@@ -33,9 +33,9 @@ INCLUDED_MODULES := $(foreach mod,$(PROJ_LIST),$(RTL_DIR)/$(mod).sv)
 # ***************************************************************************************************
 help: # shows message
 	@echo  MAKEFILE TARGETS:
-	@echo  - lint PROJ=source_file_name
-	@echo  - run-tb PROJ=source_file_name
-	@echo  - run-regression 'look at regression.sh for details'
+	@echo  - lint PROJ=module_name
+	@echo  - run-tb PROJ=module_name
+	@echo  - run-regression
 	@echo  - clean
 	@echo  - help
 

@@ -22,7 +22,7 @@ wire                  req, ack;
 wire                  mem_we_io;
 wire                  mem_valid;
 
-assign mem_data_bus_wen = (!mem_we_io && mem_valid && (address_bus_io[`ADDR_LEN-1:10] == MEM_CEN));
+assign mem_data_bus_wen = (!mem_we_io && (address_bus_io[`ADDR_LEN-1:10] == MEM_CEN));
 assign data_bus_io      = mem_data_bus_wen ? mem_data_o : `DATA_LEN'bz;
 
 always @(posedge sys_clk_i) begin 

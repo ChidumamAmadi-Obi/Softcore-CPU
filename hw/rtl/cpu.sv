@@ -61,7 +61,6 @@ logic       inst_byte_en,  inst_byte_rdy;
 logic [3:0] inst_byte_cnt, inst_byte_no;
 
 // regfile signals
-
 logic [3:0]           reg_file_address;
 logic                 reg_file_cen, reg_file_we;
 wire  [`DATA_LEN-1:0] reg_file_data;
@@ -118,47 +117,48 @@ always @(posedge sys_clk_i) begin
                     F_SEND_ADDR: begin 
                         if (!inst_byte_en) begin 
                             address_bus_reg  <= pc;
-                            mem_req_o            <= 1'b1;
-                            if (mem_ack_i) begin 
-                                mem_req_o        <= 1'b0;
-                                fetch_state  <= F_GET_OPCODE;
-                            end else begin 
-                                fetch_state  <= F_SEND_ADDR;
-                            end
+                            mem_req_o        <= 1'b1;
+                            fetch_state  <= F_GET_OPCODE;
                         end else if (!inst_byte_rdy) begin // invalid opcode
                             sr[RUN_BIT]      <= 1'b0;
                             inst_byte_en     <= 1'b0;
                             inst_byte_cnt    <= 4'h0;
-                            mem_req_o            <= 1'b0;
+                            mem_req_o        <= 1'b0;
                             fetch_state      <= F_IDLE;                        
                         end else if (inst_byte_cnt == inst_byte_no) begin // got last inst byte
                             mem_req_o            <= 1'b0;
                             fetch_state      <= F_DONE;
                         end else begin // get next inst byte
                             address_bus_reg  <= pc;
-                            mem_req_o            <= 1'b1;
-                            if (mem_ack_i) begin 
-                                mem_req_o        <= 1'b0;
-                                fetch_state  <= F_GET_OPERANDS;
-                            end else begin 
-                                fetch_state  <= F_SEND_ADDR;
-                            end
+                            mem_req_o        <= 1'b1;
+                            fetch_state  <= F_GET_OPERANDS;
                         end
                     end
 
                     F_GET_OPCODE: begin 
-                        inst_byte_en  <= 1'b1;
-                        ir[0]         <= data_i;
-                        inst_byte_cnt <= 4'h1;
-                        pc            <= pc + 1;   
-                        fetch_state   <= F_SEND_ADDR;
+                        mem_req_o <= 1'b0;
+                        if (mem_ack_i) begin 
+                            inst_byte_en  <= 1'b1;
+                            ir[0]         <= data_i;
+                            inst_byte_cnt <= 4'h1;
+                            pc            <= pc + 1;   
+                            fetch_state   <= F_SEND_ADDR;                            
+                        end else begin 
+                            fetch_state   <= F_GET_OPCODE;
+                        end
+
                     end
 
                     F_GET_OPERANDS: begin 
-                        ir[inst_byte_cnt] <= data_i;
-                        inst_byte_cnt     <= inst_byte_cnt + 1;
-                        pc                <= pc + 1;  
-                        fetch_state       <= F_SEND_ADDR;
+                        mem_req_o <= 1'b0;
+                        if (mem_ack_i) begin 
+                            ir[inst_byte_cnt] <= data_i;
+                            inst_byte_cnt     <= inst_byte_cnt + 1;
+                            pc                <= pc + 1;  
+                            fetch_state       <= F_SEND_ADDR;                            
+                        end else begin 
+                            fetch_state   <= F_GET_OPERANDS;
+                        end
                     end
 
                     F_DONE: begin 
@@ -196,6 +196,9 @@ always @(posedge sys_clk_i) begin
                 case(ir[0])
                     OP_NOP: cpu_state <= CPU_FETCH; 
                     OP_HALT: begin 
+                        for (int i=0; i<`MAX_INST_BYTES; i++) begin
+                            ir[i]   <= `DATA_LEN'h00;
+                        end    
                         sr[RUN_BIT] <= 1'b0;
                         cpu_state   <= CPU_IDLE; 
                     end

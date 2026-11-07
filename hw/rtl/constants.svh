@@ -69,6 +69,14 @@ typedef enum logic [2:0] {
     F_DONE
 } fetch_states;
 
+typedef enum logic [2:0] { 
+    MEM_IDLE,
+    MEM_READ,
+    MEM_WRITE,
+    MEM_ACK,
+    MEM_WAIT_REQ_LOW
+} mem_states;
+
 // ISA
 typedef enum logic [7:0] { 
     OP_HALT,
@@ -102,4 +110,7 @@ typedef enum logic [7:0] {
     OP_NOP
 } opcode;
 
+typedef enum logic [3:0] {
+    M_OP_STR
+} micro_ops;
 `endif

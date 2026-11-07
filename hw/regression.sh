@@ -21,7 +21,6 @@ MODULES=(
     "reg_file"
     "top")
 
-make clean
 for MODULE in "${MODULES[@]}"; do
     echo "[ RUNNING $MODULE TEST BENCH... ]" 
     make run-tb PROJ=$MODULE LOG_FILE=$MODULE
@@ -58,4 +57,4 @@ echo "  FAILED:  $FAILED/$TESTS"
 echo "  SKIPPED: $SKIPPED/$TESTS"
 echo "  PASSED:  $PASSED/$TESTS"
 echo "[ ========================== ]"
-echo "  T:${CURRENT_DATA_TIME}"
+echo "  ${CURRENT_DATA_TIME}"
