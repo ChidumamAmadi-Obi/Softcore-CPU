@@ -10,7 +10,7 @@ TB_FLAGS = --binary --timing --assert --trace
 
 # specify log file for tbs if needed
 LOG_DIR = logs
-LOG_FILE ?= verilator_tb_log
+LOG_FILE ?= tb_log
 
 # source files ***********************
 RTL_SRC = $(PROJ)
@@ -51,6 +51,9 @@ run-tb: # run tbs
 
 run-regression:
 	./regression.sh | tee $(LOG_DIR)/regression.txt
+
+clean-logs:
+	rm $(LOG_DIR)/*
 
 clean: # remove generated stuff
 	rm $(OBJ_DIR)/*

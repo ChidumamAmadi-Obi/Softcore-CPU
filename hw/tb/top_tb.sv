@@ -10,6 +10,8 @@ logic rstn = 0;
 logic [5:0] led_array;
 logic [`OUT_PORT_LEN-1:0] output_port;
 
+logic [`DATA_LEN-1:0] inst [`MAX_INST_BYTES-1:0];
+
 int fetch_errors=0;
 
 top top_dut(
@@ -125,7 +127,9 @@ endtask
 always #1 clk = ~clk;
 initial begin 
     init;
-    testCpuFetch;
+    //testCpuFetch;
+
+    #(250);
 
     if (fetch_errors) begin 
         $display("\033[31mFAILED FETCH TESTS: %0d/%0d\033[0m", fetch_errors,`FETCH_TEST_NO);

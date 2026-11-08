@@ -63,6 +63,7 @@ logic [3:0] inst_byte_cnt, inst_byte_no;
 // regfile signals
 logic [3:0]           reg_file_address;
 logic                 reg_file_cen, reg_file_we;
+logic [`DATA_LEN-1:0] reg_file_data_r;
 wire  [`DATA_LEN-1:0] reg_file_data;
 
 fetch_states fetch_state;
@@ -70,7 +71,7 @@ cpu_states   cpu_state;
 
 assign address_bus_o = address_bus_reg; 
 assign data_i        = !mem_we_o ? data_bus_io : `DATA_LEN'bz;
-assign data_o        =  mem_we_o ? data_bus_io : `DATA_LEN'bz;
+assign data_bus_io   =  mem_we_o ? data_o      : `DATA_LEN'bz;
 
 // cpu state machine 3 stage
 always @(posedge sys_clk_i) begin 
@@ -82,6 +83,7 @@ always @(posedge sys_clk_i) begin
         pc               <= `ADDR_LEN'h0;
         ninst            <= `ADDR_LEN'h0;
         address_bus_reg  <= `ADDR_LEN'h0;
+        data_o           <= `DATA_LEN'h00;
         sr               <= 8'h80; // start with RUN_BIT set
         mem_we_o         <= 1'b0;
         mem_req_o        <= 1'b0;       
@@ -92,6 +94,7 @@ always @(posedge sys_clk_i) begin
         reg_file_cen     <= 1'b0;
         reg_file_we      <= 1'b0;
         reg_file_address <= 4'H0;
+        reg_file_data_r  <= `DATA_LEN'h00;
 
         cpu_state        <= CPU_FETCH;
         fetch_state      <= F_IDLE;
@@ -102,6 +105,12 @@ always @(posedge sys_clk_i) begin
             CPU_FETCH: begin 
                 case(fetch_state)
                     F_IDLE: begin 
+                        reg_file_cen     <= 1'b0;
+                        reg_file_we      <= 1'b0;
+                        reg_file_address <= 4'H0;
+                        reg_file_data_r  <= `DATA_LEN'h00;
+                        data_o           <= `DATA_LEN'h00;
+
                         inst_byte_cnt    <= 4'h0;
                         inst_byte_en     <= 1'b0;
                         mem_we_o         <= 1'b0;
@@ -183,6 +192,27 @@ always @(posedge sys_clk_i) begin
                         cpu_state <= CPU_EXECUTE; // skip to execute stage
                     end  
 
+                    OP_LDI: begin 
+                        reg_file_address <= ir[1];
+                        reg_file_data_r <= ir[2];
+                        reg_file_cen <= 1'b1;
+                        reg_file_we <= 1'b1;
+                        cpu_state <= CPU_EXECUTE; 
+                    end
+
+                    OP_LD: begin 
+                        address_bus_reg <= {ir[2], ir[3]};
+                        mem_req_o <= 1'b1;
+                        mem_we_o <= 1'b0; // read
+                        cpu_state <= CPU_EXECUTE; 
+                    end
+
+                    OP_STR: begin 
+                        reg_file_address <= ir[3];
+                        reg_file_cen <= 1'b1;
+                        reg_file_we <= 1'b0;
+                        cpu_state <= CPU_EXECUTE; 
+                    end
                     default: begin 
                         cpu_state <= CPU_EXECUTE; // skip to next state for now
                     end
@@ -228,6 +258,43 @@ always @(posedge sys_clk_i) begin
                         pc    <= {ir[1], ir[2]};
                         cpu_state <= CPU_FETCH;
                     end
+
+                    OP_LDI: begin 
+                        reg_file_cen <= 1'b0;
+                        reg_file_we  <= 1'b0;
+                        cpu_state    <= CPU_FETCH;
+                    end
+                    OP_LD: begin 
+                        if (!mem_ack_i) begin 
+                            cpu_state <= CPU_EXECUTE;
+                        end else begin 
+                            mem_req_o <= 1'b0;
+                            reg_file_address <= ir[1];
+                            reg_file_data_r <= data_i;
+                            reg_file_cen <= 1'b1;
+                            reg_file_we <= 1'b1;
+                            cpu_state <= CPU_FETCH;
+                        end
+                    end
+
+                    OP_STR: begin 
+                        if (reg_file_cen) begin // store reg data into mem
+                            reg_file_cen    <= 1'b0;
+                            data_o          <= reg_file_data;
+                            mem_req_o       <= 1'b1;
+                            mem_we_o        <= 1'b1;
+                            address_bus_reg <= {ir[1], ir[2]};
+                            cpu_state       <= CPU_EXECUTE;
+                        end else if (!mem_ack_i) begin // wait for ack
+                            cpu_state       <= CPU_EXECUTE;
+                        end else begin 
+                            mem_req_o       <= 1'b0;
+                            mem_we_o        <= 1'b0;
+                            cpu_state       <= CPU_FETCH;
+                        end
+
+                        
+                    end
                     default: cpu_state <= CPU_FETCH; // skip to next state for now
                 endcase 
             end
@@ -243,7 +310,7 @@ no_bytes no_bytes_c(
     .rdy_o(inst_byte_rdy));
 
 
-
+assign reg_file_data = reg_file_we ? reg_file_data_r : `DATA_LEN'bz;
 reg_file reg_file_io(
     .sys_clk_i(sys_clk_i),
     .sys_rstn_i(sys_rstn_i),
