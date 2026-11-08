@@ -183,9 +183,6 @@ always @(posedge sys_clk_i) begin
                         cpu_state <= CPU_EXECUTE; // skip to execute stage
                     end  
 
-                    OP_LDI: begin 
-                    
-                    end
                     default: begin 
                         cpu_state <= CPU_EXECUTE; // skip to next state for now
                     end

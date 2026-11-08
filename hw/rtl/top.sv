@@ -18,7 +18,7 @@ wire [`DATA_LEN-1:0] data_bus_io;
 */
 logic [`DATA_LEN-1:0] mem_data_i, mem_data_o;
 wire                  mem_data_bus_wen;
-wire                  req, ack;
+wire                  req, ack, err_ack;
 wire                  mem_we_io;
 wire                  mem_valid;
 
@@ -55,6 +55,7 @@ memory memory_io (
     .data_i(mem_data_i),
     .data_o(mem_data_o),
     .ack_o(ack),
+    .err_ack_o(err_ack),
     .valid_o(mem_valid));
 
 periphs periphs_o (

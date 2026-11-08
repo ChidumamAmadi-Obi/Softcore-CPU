@@ -13,6 +13,7 @@ logic [7:0]  data_out;
 logic        valid;
 logic        req;
 logic        ack = 0;
+logic        err_ack;
 
 // test signals
 logic [15:0] test_address;
@@ -33,6 +34,7 @@ memory memory_dut (
     .data_i(data_in),
     .data_o(data_out),
     .ack_o(ack),
+    .err_ack_o(err_ack),
     .valid_o(valid));
 
 task init;

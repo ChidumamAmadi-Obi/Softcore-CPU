@@ -9,6 +9,7 @@ module memory (
     input logic  [`DATA_LEN-1:0] data_i,
     output logic [`DATA_LEN-1:0] data_o,
     output logic                 ack_o,
+    output logic                 err_ack_o,
     output logic                 valid_o
     );
 
@@ -42,12 +43,14 @@ always @(posedge sys_clk_i) begin
         valid       <= 1'h0;
         data_out    <= `DATA_LEN'h00;
         ack_o       <= 1'b0;
+        err_ack_o   <= 1'b0;
         mem_state   <= MEM_IDLE;
     end else if (mem_cen) begin 
         case (mem_state)
             MEM_IDLE: begin 
-                ack_o    <= 1'b0;
-                valid    <= 1'b0;
+                ack_o     <= 1'b0;
+                valid     <= 1'b0;
+                err_ack_o <= 1'b0;
                 if      (req_i &&  we_i) mem_state <= MEM_WRITE;
                 else if (req_i && !we_i) mem_state <= MEM_READ;
                 else                     mem_state <= MEM_IDLE;
@@ -60,7 +63,7 @@ always @(posedge sys_clk_i) begin
                     `DATA_LEN'h01: begin data_out <= ram_1[address_bus_i[`DATA_LEN-1:0]]; valid <= 1'b1; mem_state <= MEM_ACK; end
                     `DATA_LEN'h02: begin data_out <= ram_2[address_bus_i[`DATA_LEN-1:0]]; valid <= 1'b1; mem_state <= MEM_ACK; end
                     `DATA_LEN'h03: begin data_out <= ram_3[address_bus_i[`DATA_LEN-1:0]]; valid <= 1'b1; mem_state <= MEM_ACK; end
-                    default:       begin data_out <= `DATA_LEN'h00; valid <= 1'b0; mem_state <= MEM_WAIT_REQ_LOW; end
+                    default:       begin data_out <= `DATA_LEN'h00; valid <= 1'b0; mem_state <= MEM_ERR_ACK; end
                 endcase  
             end
 
@@ -70,7 +73,7 @@ always @(posedge sys_clk_i) begin
                     `DATA_LEN'h01: begin ram_1[address_bus_i[`DATA_LEN-1:0]] <= data_i; mem_state <= MEM_ACK; end 
                     `DATA_LEN'h02: begin ram_2[address_bus_i[`DATA_LEN-1:0]] <= data_i; mem_state <= MEM_ACK; end 
                     `DATA_LEN'h03: begin ram_3[address_bus_i[`DATA_LEN-1:0]] <= data_i; mem_state <= MEM_ACK; end 
-                    default: mem_state <= MEM_WAIT_REQ_LOW;
+                    default: mem_state <= MEM_ERR_ACK;
                 endcase
                 data_out <= `DATA_LEN'h00;  
                 valid <= 1'b0;
@@ -81,16 +84,23 @@ always @(posedge sys_clk_i) begin
                 mem_state <= req_i ? MEM_WAIT_REQ_LOW : MEM_IDLE;
             end
 
+            MEM_ERR_ACK: begin 
+                err_ack_o <= 1'b1;
+                mem_state <= req_i ? MEM_WAIT_REQ_LOW : MEM_IDLE;
+            end
+
             MEM_WAIT_REQ_LOW: begin 
-                ack_o <= 1'b0;
-                valid <= 1'b0;
+                ack_o     <= 1'b0;
+                err_ack_o <= 1'b0;
+                valid     <= 1'b0;
                 mem_state <= req_i ? MEM_WAIT_REQ_LOW : MEM_IDLE;
             end
 
             default: begin 
                 valid     <= 1'h0;
                 data_out  <= `DATA_LEN'h00;
-                ack_o     <= 1'b0;                
+                ack_o     <= 1'b0;   
+                err_ack_o <= 1'b0;             
                 mem_state <= MEM_IDLE; 
             end
         endcase

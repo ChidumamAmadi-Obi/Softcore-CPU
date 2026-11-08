@@ -39,12 +39,12 @@ parameter MEM_CEN = 6'h00;
 parameter PERIPH_CEN = 6'h01;
 
 // status register bits
-parameter RUN_BIT = 8'd7;
-parameter ERR_BIT = 8'd6; // fatal error
-parameter ZRO_BIT = 8'd3;
-parameter OVF_BIT = 8'd2;
-parameter CRY_BIT = 8'd1;
-parameter NEG_BIT = 8'd0;
+parameter RUN_BIT = 7;
+parameter ERR_BIT = 6; // fatal error
+parameter ZRO_BIT = 3;
+parameter OVF_BIT = 2;
+parameter CRY_BIT = 1;
+parameter NEG_BIT = 0;
 
 // addresses for memory mapped peripherals
 typedef enum logic [15:0] { 
@@ -74,6 +74,7 @@ typedef enum logic [2:0] {
     MEM_READ,
     MEM_WRITE,
     MEM_ACK,
+    MEM_ERR_ACK,
     MEM_WAIT_REQ_LOW
 } mem_states;
 

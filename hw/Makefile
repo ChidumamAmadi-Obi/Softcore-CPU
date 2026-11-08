@@ -2,8 +2,8 @@
 PROJ ?= top 
 
 # enter warning disables
-RTL_DISABLE_WARNING ?= -Wno-WIDTHEXPAND
-TB_DISABLE_WARNING ?=  $(RTL_DISABLE_WARNING) -Wno-WIDTHTRUNC
+RTL_DISABLE_WARNING ?= -Wno-WIDTHEXPAND -Wno-WIDTHTRUNC
+TB_DISABLE_WARNING ?=  $(RTL_DISABLE_WARNING)
 
 # specify test bench flags
 TB_FLAGS = --binary --timing --assert --trace 
