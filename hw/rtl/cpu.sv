@@ -105,7 +105,7 @@ always @(posedge sys_clk_i) begin
                         inst_byte_cnt    <= 4'h0;
                         inst_byte_en     <= 1'b0;
                         mem_we_o         <= 1'b0;
-                        mem_req_o            <= 1'b0;
+                        mem_req_o        <= 1'b0;
                         if (sr[RUN_BIT]) begin
                             fetch_state  <= F_SEND_ADDR;
                         end else begin
@@ -118,7 +118,7 @@ always @(posedge sys_clk_i) begin
                         if (!inst_byte_en) begin 
                             address_bus_reg  <= pc;
                             mem_req_o        <= 1'b1;
-                            fetch_state  <= F_GET_OPCODE;
+                            fetch_state      <= F_GET_OPCODE;
                         end else if (!inst_byte_rdy) begin // invalid opcode
                             sr[RUN_BIT]      <= 1'b0;
                             inst_byte_en     <= 1'b0;
@@ -126,12 +126,12 @@ always @(posedge sys_clk_i) begin
                             mem_req_o        <= 1'b0;
                             fetch_state      <= F_IDLE;                        
                         end else if (inst_byte_cnt == inst_byte_no) begin // got last inst byte
-                            mem_req_o            <= 1'b0;
+                            mem_req_o        <= 1'b0;
                             fetch_state      <= F_DONE;
                         end else begin // get next inst byte
                             address_bus_reg  <= pc;
                             mem_req_o        <= 1'b1;
-                            fetch_state  <= F_GET_OPERANDS;
+                            fetch_state      <= F_GET_OPERANDS;
                         end
                     end
 
