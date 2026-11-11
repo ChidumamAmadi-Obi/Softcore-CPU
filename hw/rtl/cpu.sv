@@ -70,11 +70,11 @@ wire  [`DATA_LEN-1:0] reg_file_data;
 logic [`DATA_LEN-1:0] alu_operand_a, alu_operand_b, alu_result;
 logic [3:0]           alu_flags;
 logic                 alu_cen, alu_valid;
-logic [1:0] alu_rdy;
+logic [1:0]           alu_rdy;
 
-fetch_states fetch_state;
-cpu_states   cpu_state;
-alu_execute_states alu_execute_state;
+fetch_states          fetch_state;
+cpu_states            cpu_state;
+alu_execute_states    alu_execute_state;
 
 assign address_bus_o = address_bus_reg; 
 assign data_i        = !mem_we_o ? data_bus_io : `DATA_LEN'bz;
@@ -167,7 +167,7 @@ always @(posedge sys_clk_i) begin
                         mem_req_o <= 1'b0;
                         if (mem_ack_i) begin 
                             inst_byte_en  <= 1'b1;
-                            ir[0]         <= data_i;
+                            ir[OPCODE]         <= data_i;
                             inst_byte_cnt <= 4'h1;
                             pc            <= pc + 1;   
                             fetch_state   <= F_SEND_ADDR;                            
@@ -215,7 +215,7 @@ always @(posedge sys_clk_i) begin
                     OP_ADD,  OP_SUB,  OP_MUL,  OP_AND,  
                     OP_ORI, OP_XORI, OP_EQUI, OP_DIVI,
                     OP_OR,  OP_XOR,  OP_EQU,  OP_DIV: begin // get val from first src reg
-                        reg_file_address <= ir[2];
+                        reg_file_address <= ir[OPERAND_B];
                         reg_file_cen <= 1'b1;
                         reg_file_we <= 1'b0;
                         alu_execute_state <= ALU_EXEC_LOAD_FST_VAL;
@@ -223,26 +223,26 @@ always @(posedge sys_clk_i) begin
                     end
 
                     OP_LDI: begin 
-                        reg_file_address <= ir[1];
-                        reg_file_data_buffer <= ir[2];
+                        reg_file_address <= ir[OPERAND_A];
+                        reg_file_data_buffer <= ir[OPERAND_B];
                         reg_file_cen <= 1'b1;
                         reg_file_we <= 1'b1;
                         cpu_state <= CPU_EXECUTE; 
                     end
                     OP_LD: begin 
-                        address_bus_reg <= {ir[2], ir[3]};
+                        address_bus_reg <= {ir[OPERAND_B], ir[OPERAND_C]};
                         mem_req_o <= 1'b1;
                         mem_we_o <= 1'b0; // read
                         cpu_state <= CPU_EXECUTE; 
                     end
                     OP_MOV: begin 
-                        reg_file_address <= ir[2];
+                        reg_file_address <= ir[OPERAND_B];
                         reg_file_cen <= 1'b1;
                         reg_file_we <= 1'b0;
                         cpu_state <= CPU_EXECUTE;                         
                     end
                     OP_STR: begin 
-                        reg_file_address <= ir[3];
+                        reg_file_address <= ir[OPERAND_C];
                         reg_file_cen <= 1'b1;
                         reg_file_we <= 1'b0;
                         cpu_state <= CPU_EXECUTE; 
@@ -256,7 +256,7 @@ always @(posedge sys_clk_i) begin
             end
                 
             CPU_EXECUTE: begin 
-                case(ir[0])
+                case(ir[OPCODE])
                     OP_NOP: cpu_state <= CPU_FETCH; 
                     OP_HALT: begin 
                         for (int i=0; i<`MAX_INST_BYTES; i++) begin
@@ -266,7 +266,7 @@ always @(posedge sys_clk_i) begin
                         cpu_state   <= CPU_IDLE; 
                     end
                     OP_JMP: begin 
-                        pc <= {ir[1], ir[2]}; 
+                        pc <= {ir[OPERAND_A], ir[OPERAND_B]}; 
                         cpu_state <= CPU_FETCH;
                     end
                     OP_RET: begin 
@@ -274,24 +274,24 @@ always @(posedge sys_clk_i) begin
                         cpu_state <= CPU_FETCH;
                     end
                     OP_JMP_ABV: begin 
-                        pc <= (!sr[ZRO_BIT] && !sr[NEG_BIT]) ? {ir[1], ir[2]} : pc; 
+                        pc <= (!sr[ZRO_BIT] && !sr[NEG_BIT]) ? {ir[OPERAND_B], ir[OPERAND_C]} : pc; 
                         cpu_state <= CPU_FETCH;
                     end
                     OP_JMP_NEG: begin 
-                        pc <=   sr[NEG_BIT]                  ? {ir[1], ir[2]} : pc; 
+                        pc <=   sr[NEG_BIT]                  ? {ir[OPERAND_B], ir[OPERAND_C]} : pc; 
                         cpu_state <= CPU_FETCH;
                     end
                     OP_JMP_OFW: begin 
-                        pc <=   sr[OVF_BIT]                  ? {ir[1], ir[2]} : pc; 
+                        pc <=   sr[OVF_BIT]                  ? {ir[OPERAND_B], ir[OPERAND_C]} : pc; 
                         cpu_state <= CPU_FETCH;
                     end
                     OP_JMP_ZRO: begin 
-                        pc <=   sr[ZRO_BIT]                  ? {ir[1], ir[2]} : pc; 
+                        pc <=   sr[ZRO_BIT]                  ? {ir[OPERAND_B], ir[OPERAND_C]} : pc; 
                         cpu_state <= CPU_FETCH;
                     end
                     OP_CALL: begin 
                         ninst <= pc + 1; // save location of next inst after call
-                        pc    <= {ir[1], ir[2]};
+                        pc    <= {ir[OPERAND_B], ir[OPERAND_C]};
                         cpu_state <= CPU_FETCH;
                     end
 
@@ -305,7 +305,7 @@ always @(posedge sys_clk_i) begin
                             cpu_state <= CPU_EXECUTE;
                         end else begin 
                             mem_req_o <= 1'b0;
-                            reg_file_address <= ir[1];
+                            reg_file_address <= ir[OPERAND_A];
                             reg_file_data_buffer <= data_i;
                             reg_file_cen <= 1'b1;
                             reg_file_we <= 1'b1;
@@ -314,7 +314,7 @@ always @(posedge sys_clk_i) begin
                     end
                     OP_MOV: begin 
                         reg_file_we          <= 1'b1;
-                        reg_file_address     <= ir[1];
+                        reg_file_address     <= ir[OPERAND_A];
                         reg_file_data_buffer <= reg_file_data;
                         cpu_state            <= CPU_FETCH;   
                     end
@@ -324,7 +324,7 @@ always @(posedge sys_clk_i) begin
                             data_o          <= reg_file_data;
                             mem_req_o       <= 1'b1;
                             mem_we_o        <= 1'b1;
-                            address_bus_reg <= {ir[1], ir[2]};
+                            address_bus_reg <= {ir[OPERAND_A], ir[OPERAND_B]};
                             cpu_state       <= CPU_EXECUTE;
                         end else if (!mem_ack_i) begin // wait for ack
                             cpu_state       <= CPU_EXECUTE;
@@ -338,12 +338,12 @@ always @(posedge sys_clk_i) begin
                     OP_ADDI, OP_SUBI, OP_MULI, OP_ANDI,
                     OP_ORI, OP_XORI, OP_EQUI, OP_DIVI: begin 
                         case(alu_execute_state)
-                            ALU_EXEC_IDLE: ;
+                            ALU_EXEC_IDLE: begin end
                             ALU_EXEC_LOAD_FST_VAL: begin
                                 // here load src reg val and imm val into alu, then enable
                                 alu_cen              <= 1'b1;
                                 alu_operand_a        <= reg_file_data;
-                                alu_operand_b        <= ir[3];
+                                alu_operand_b        <= ir[OPERAND_C]; // operand b is last byte if inst
                                 alu_execute_state    <= ALU_EXEC_WAIT;
 
                                 reg_file_cen         <= 1'b0;
@@ -363,7 +363,7 @@ always @(posedge sys_clk_i) begin
                             end
                             ALU_EXEC_STORE: begin 
                                 reg_file_cen         <= 1'b1;
-                                reg_file_address     <= ir[1];
+                                reg_file_address     <= ir[OPERAND_A];
                                 reg_file_we          <= 1'b1;
                                 reg_file_data_buffer <= alu_result;
                                 sr[3:0]              <= alu_flags;
@@ -377,6 +377,57 @@ always @(posedge sys_clk_i) begin
                             end
                         endcase
                     end
+
+                    OP_ADD, OP_SUB, OP_MUL, OP_AND,
+                    OP_OR, OP_XOR, OP_EQU, OP_DIV: begin 
+                        case(alu_execute_state)
+                            ALU_EXEC_IDLE: begin end
+                            ALU_EXEC_LOAD_FST_VAL: begin
+                                // here load first reg val...
+                                alu_operand_a        <= reg_file_data;
+
+                                reg_file_address     <= ir[OPERAND_C]; // load addr of next reg to get next operand
+                                alu_execute_state    <= ALU_EXEC_LOAD_SEC_VAL;
+                                cpu_state            <= CPU_EXECUTE;
+                            end
+                            ALU_EXEC_LOAD_SEC_VAL: begin
+                                // here load second reg val and enable alu
+                                alu_cen              <= 1'b1;
+                                alu_operand_b        <= reg_file_data;
+
+                                reg_file_cen         <= 1'b0;
+                                reg_file_we          <= 1'b0;
+                                reg_file_address     <= 4'H0;
+                                alu_execute_state    <= ALU_EXEC_WAIT;
+                                cpu_state            <= CPU_EXECUTE;
+                            end                            
+                            ALU_EXEC_WAIT: begin
+                                if (alu_rdy != `ALU_LATENCY) begin 
+                                    alu_execute_state <= ALU_EXEC_WAIT;
+                                    cpu_state         <= CPU_EXECUTE;
+                                    alu_rdy           <= alu_rdy + 1'b1;
+                                end else begin 
+                                    alu_execute_state <= ALU_EXEC_STORE;
+                                    cpu_state         <= CPU_EXECUTE;
+                                end
+                            end
+                            ALU_EXEC_STORE: begin 
+                                reg_file_cen         <= 1'b1;
+                                reg_file_address     <= ir[OPERAND_A];
+                                reg_file_we          <= 1'b1;
+                                reg_file_data_buffer <= alu_result;
+                                sr[3:0]              <= alu_flags;
+                                alu_execute_state    <= ALU_EXEC_IDLE;
+                                cpu_state            <= CPU_FETCH;
+                            end 
+                            default: begin 
+                                sr[RUN_BIT]          <= 1'b0;
+                                alu_execute_state    <= ALU_EXEC_IDLE;
+                                cpu_state            <= CPU_IDLE;
+                            end
+                        endcase
+                    end
+
                     default: begin 
                         sr[RUN_BIT] <= 1'b0;
                         cpu_state   <= CPU_FETCH; 
@@ -392,7 +443,7 @@ always @(posedge sys_clk_i) begin
 end
 
 no_bytes no_bytes_c(
-    .opcode_i(opcode'(ir[0])),
+    .opcode_i(opcode'(ir[OPCODE])),
     .cen_i(inst_byte_en),
     .no_bytes_o(inst_byte_no),
     .rdy_o(inst_byte_rdy));
@@ -410,7 +461,7 @@ alu alu_io(
     .sys_clk_i(sys_clk_i),
     .sys_rstn_i(sys_rstn_i),
     .cen_i(alu_cen),
-    .opcode_i(ir[0]),
+    .opcode_i(ir[OPCODE]),
     .operand_a_i(alu_operand_a),
     .operand_b_i(alu_operand_b),
     .result_o(alu_result),

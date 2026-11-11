@@ -49,7 +49,7 @@ parameter CRY_BIT = 1;
 parameter NEG_BIT = 0;
 
 // instruction byte index
-parameter OPECODE   = 0;
+parameter OPCODE    = 0;
 parameter OPERAND_A = 1;
 parameter OPERAND_B = 2;
 parameter OPERAND_C = 3;
