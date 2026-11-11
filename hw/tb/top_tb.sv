@@ -129,7 +129,7 @@ initial begin
     init;
     //testCpuFetch;
 
-    #(250);
+    #(1000);
 
     if (fetch_errors) begin 
         $display("\033[31mFAILED FETCH TESTS: %0d/%0d\033[0m", fetch_errors,`FETCH_TEST_NO);

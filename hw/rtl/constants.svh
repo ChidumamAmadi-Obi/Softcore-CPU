@@ -27,8 +27,10 @@
 `define OUT_PORT_1_LEN 8
 `define OUT_PORT_LEN 16
 
+// other constants
 `define MAX_INST_BYTES 4
 `define MAX_NO_OPERANDS 3
+`define ALU_LATENCY 2 // alu takes 2 clk cycles to execute
 
 parameter MAX_FULL_RES = `FULL_RESULT_LEN'h00FF;
 parameter MAX_OPERAND = `DATA_LEN'hFF;
@@ -45,6 +47,12 @@ parameter ZRO_BIT = 3;
 parameter OVF_BIT = 2;
 parameter CRY_BIT = 1;
 parameter NEG_BIT = 0;
+
+// instruction byte index
+parameter OPECODE   = 0;
+parameter OPERAND_A = 1;
+parameter OPERAND_B = 2;
+parameter OPERAND_C = 3;
 
 // addresses for memory mapped peripherals
 typedef enum logic [15:0] { 
@@ -77,6 +85,15 @@ typedef enum logic [2:0] {
     MEM_ERR_ACK,
     MEM_WAIT_REQ_LOW
 } mem_states;
+
+typedef enum logic [2:0] {
+    ALU_EXEC_IDLE,
+    ALU_EXEC_LOAD_FST_VAL,
+    ALU_EXEC_LOAD_SEC_VAL,
+    ALU_EXEC_WAIT,
+    ALU_EXEC_STORE,
+    ALU_EXEC_END
+} alu_execute_states;
 
 // ISA
 typedef enum logic [7:0] { 

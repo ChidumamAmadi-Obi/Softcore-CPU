@@ -1,5 +1,6 @@
 `include "constants.svh"
 
+// 2 CLK CYCLE LATANCEY //
 module alu(
     input logic                  sys_clk_i,
     input logic                  sys_rstn_i,
