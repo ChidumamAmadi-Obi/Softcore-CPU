@@ -63,7 +63,7 @@ logic [3:0] inst_byte_cnt, inst_byte_no;
 // regfile signals
 logic [3:0]           reg_file_address;
 logic                 reg_file_cen, reg_file_we;
-logic [`DATA_LEN-1:0] reg_file_data_r;
+logic [`DATA_LEN-1:0] reg_file_data_buffer;
 wire  [`DATA_LEN-1:0] reg_file_data;
 
 fetch_states fetch_state;
@@ -94,7 +94,7 @@ always @(posedge sys_clk_i) begin
         reg_file_cen     <= 1'b0;
         reg_file_we      <= 1'b0;
         reg_file_address <= 4'H0;
-        reg_file_data_r  <= `DATA_LEN'h00;
+        reg_file_data_buffer  <= `DATA_LEN'h00;
 
         cpu_state        <= CPU_FETCH;
         fetch_state      <= F_IDLE;
@@ -108,7 +108,7 @@ always @(posedge sys_clk_i) begin
                         reg_file_cen     <= 1'b0;
                         reg_file_we      <= 1'b0;
                         reg_file_address <= 4'H0;
-                        reg_file_data_r  <= `DATA_LEN'h00;
+                        reg_file_data_buffer  <= `DATA_LEN'h00;
                         data_o           <= `DATA_LEN'h00;
 
                         inst_byte_cnt    <= 4'h0;
@@ -194,7 +194,7 @@ always @(posedge sys_clk_i) begin
 
                     OP_LDI: begin 
                         reg_file_address <= ir[1];
-                        reg_file_data_r <= ir[2];
+                        reg_file_data_buffer <= ir[2];
                         reg_file_cen <= 1'b1;
                         reg_file_we <= 1'b1;
                         cpu_state <= CPU_EXECUTE; 
@@ -205,6 +205,13 @@ always @(posedge sys_clk_i) begin
                         mem_req_o <= 1'b1;
                         mem_we_o <= 1'b0; // read
                         cpu_state <= CPU_EXECUTE; 
+                    end
+
+                    OP_MOV: begin 
+                        reg_file_address <= ir[2];
+                        reg_file_cen <= 1'b1;
+                        reg_file_we <= 1'b0;
+                        cpu_state <= CPU_EXECUTE;                         
                     end
 
                     OP_STR: begin 
@@ -270,11 +277,18 @@ always @(posedge sys_clk_i) begin
                         end else begin 
                             mem_req_o <= 1'b0;
                             reg_file_address <= ir[1];
-                            reg_file_data_r <= data_i;
+                            reg_file_data_buffer <= data_i;
                             reg_file_cen <= 1'b1;
                             reg_file_we <= 1'b1;
                             cpu_state <= CPU_FETCH;
                         end
+                    end
+
+                    OP_MOV: begin 
+                        reg_file_we          <= 1'b1;
+                        reg_file_address     <= ir[1];
+                        reg_file_data_buffer <= reg_file_data;
+                        cpu_state            <= CPU_FETCH;   
                     end
 
                     OP_STR: begin 
@@ -310,7 +324,7 @@ no_bytes no_bytes_c(
     .rdy_o(inst_byte_rdy));
 
 
-assign reg_file_data = reg_file_we ? reg_file_data_r : `DATA_LEN'bz;
+assign reg_file_data = reg_file_we ? reg_file_data_buffer : `DATA_LEN'bz;
 reg_file reg_file_io(
     .sys_clk_i(sys_clk_i),
     .sys_rstn_i(sys_rstn_i),
