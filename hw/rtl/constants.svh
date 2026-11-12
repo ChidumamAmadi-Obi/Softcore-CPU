@@ -128,7 +128,4 @@ typedef enum logic [7:0] {
     OP_NOP
 } opcode;
 
-typedef enum logic [3:0] {
-    M_OP_STR
-} micro_ops;
 `endif

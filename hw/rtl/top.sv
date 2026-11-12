@@ -7,14 +7,12 @@ module top (
     output logic [5:0]               led_arr_o,
     output logic [`OUT_PORT_LEN-1:0] output_port_o);
 
-/*
-* cpu internal buses
+/* buses
 */
 wire [`ADDR_LEN-1:0] address_bus_io;
 wire [`DATA_LEN-1:0] data_bus_io;
 
-/*
-* memory control 
+/* memory control 
 */
 logic [`DATA_LEN-1:0] mem_data_i, mem_data_o;
 wire                  mem_data_bus_wen;
@@ -33,8 +31,7 @@ always @(posedge sys_clk_i) begin
     end
 end
 
-/*
-* module connections
+/* module connections
 */
 cpu cpu_io(
     .sys_clk_i(sys_clk_i),
@@ -45,7 +42,6 @@ cpu cpu_io(
     .mem_we_o(mem_we_io),
     .mem_req_o(req)
 );
-
 memory memory_io (
     .sys_clk_i(sys_clk_i),
     .sys_rstn_i(sys_rstn_i),
@@ -57,7 +53,6 @@ memory memory_io (
     .ack_o(ack),
     .err_ack_o(err_ack),
     .valid_o(mem_valid));
-
 periphs periphs_o (
     .sys_clk_i(sys_clk_i),
     .sys_rstn_i(sys_rstn_i),

@@ -35,15 +35,19 @@ always @(posedge sys_clk_i) begin
         b <= operand_b_i;
 
         case(opcode_i)
-            OP_ADD, OP_ADDI: begin full_result <= a + b;    valid <= 1'b1; end
-            OP_SUB, OP_SUBI: begin full_result <= a - b;    valid <= 1'b1; end
-            OP_MUL, OP_MULI: begin full_result <= a * b;    valid <= 1'b1; end
-            OP_DIV, OP_DIVI: begin full_result <= a / b;    valid <= 1'b1; end // note: need to handle division by zero
-    
             OP_AND, OP_ANDI: begin full_result <= a & b;    valid <= 1'b1; end
             OP_OR, OP_ORI:   begin full_result <= a | b;    valid <= 1'b1; end
             OP_XOR, OP_XORI: begin full_result <= a ^ b;    valid <= 1'b1; end
             OP_EQU, OP_EQUI: begin full_result <= a == b;   valid <= 1'b1; end
+
+            OP_ADD, OP_ADDI: begin full_result <= a + b;    valid <= 1'b1; end
+            OP_SUB, OP_SUBI: begin full_result <= a - b;    valid <= 1'b1; end
+            OP_MUL, OP_MULI: begin full_result <= a * b;    valid <= 1'b1; end
+            OP_DIV, OP_DIVI: begin 
+                if (b) full_result <= a / b; 
+                else   full_result <= `FULL_RESULT_LEN'h0000;
+                valid <= 1'b1; 
+            end            
             default:         begin full_result <= `FULL_RESULT_LEN'h0000; valid <= 1'b0; end
         endcase
     end

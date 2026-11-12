@@ -17,7 +17,6 @@ MODULES=(
     # "control_unit"
     #"cpu"
     "memory"
-    #"periphs",
     "reg_file"
     "top")
 
