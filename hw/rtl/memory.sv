@@ -5,7 +5,7 @@ module memory (
     input logic                  sys_rstn_i,
     input logic                  req_i,
     input logic  [`ADDR_LEN-1:0] address_bus_i,
-    input logic                  we_i, // write enable 
+    input logic                  we_i,
     input logic  [`DATA_LEN-1:0] data_i,
     output logic [`DATA_LEN-1:0] data_o,
     output logic                 ack_o,

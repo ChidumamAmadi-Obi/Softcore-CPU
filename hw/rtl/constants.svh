@@ -52,15 +52,15 @@ parameter OPERAND_B = 2;
 parameter OPERAND_C = 3;
 
 parameter MEM_CEN = 6'h00;
-parameter PERIPH_CEN = 6'h01;
+parameter PERIPH_WEN = 6'h01;
 
 parameter STR_TYPE_MEM    = 1'b0;
 parameter STR_TYPE_PERIPH = 1'b1;
 // addresses for memory mapped peripherals
-typedef enum logic [15:0] { 
-    LED_ARRAY  = 16'h0400,
-    OUT_PORT_0 = 16'h0401,
-    OUT_PORT_1 = 16'h0402
+typedef enum logic [7:0] { 
+    LED_ARRAY  = 8'h00,
+    OUT_PORT_0 = 8'h01,
+    OUT_PORT_1 = 8'h02
 } peripheral_address;
 
 // control unit states

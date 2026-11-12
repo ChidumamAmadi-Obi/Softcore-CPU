@@ -4,16 +4,19 @@ module cpu(
     input logic                  sys_clk_i,
     input logic                  sys_rstn_i,
     input logic                  mem_ack_i,
+    input logic                  periph_ack_i,
     inout logic  [`DATA_LEN-1:0] data_bus_io,
     output logic [`ADDR_LEN-1:0] address_bus_o,
     output logic                 mem_we_o,
-    output logic                 mem_req_o);
+    output logic                 mem_req_o,
+    output logic                 periph_req_o);
 
 logic [`DATA_LEN-1:0] ir [`MAX_INST_BYTES-1:0];
 logic [`ADDR_LEN-1:0] pc, ninst;
 logic [7:0]           sr; // status register
 logic [`ADDR_LEN-1:0] address_bus_reg;
 logic [`DATA_LEN-1:0] data_o;
+logic                 str_type;
 
 // fetch signals
 logic       inst_byte_en,  inst_byte_rdy;
@@ -36,9 +39,11 @@ fetch_states          fetch_state;
 cpu_states            cpu_state;
 alu_execute_states    alu_execute_state;
 
+
+
 // cpu bus control
 assign address_bus_o = address_bus_reg; 
-assign data_bus_io   = mem_we_o ? data_o : `DATA_LEN'bz;
+assign data_bus_io   = mem_we_o || (str_type == STR_TYPE_PERIPH) ? data_o : `DATA_LEN'bz;
 
 assign reg_file_data = reg_file_we ? reg_file_data_buffer : `DATA_LEN'bz;
 
@@ -70,6 +75,8 @@ always @(posedge sys_clk_i) begin
         alu_rdy          <= 2'h0;
         alu_cen          <= 1'b0;
 
+        str_type <= STR_TYPE_MEM;
+
         cpu_state         <= CPU_FETCH;
         fetch_state       <= F_IDLE;
         alu_execute_state <= ALU_EXEC_IDLE;
@@ -95,6 +102,8 @@ always @(posedge sys_clk_i) begin
                         alu_operand_b    <= `DATA_LEN'h00;
                         alu_rdy <= 2'h0;
                         alu_cen          <= 1'b0;
+
+                        str_type <= STR_TYPE_MEM;
                         if (sr[RUN_BIT]) begin
                             fetch_state  <= F_SEND_ADDR;
                         end else begin
@@ -207,6 +216,11 @@ always @(posedge sys_clk_i) begin
                         reg_file_cen     <= 1'b1;
                         reg_file_we      <= 1'b0;
                         cpu_state        <= CPU_EXECUTE; 
+                        if ({ir[OPERAND_A], ir[OPERAND_B]} <= (MAX_ADDR_MEM-1)) begin 
+                            str_type <= STR_TYPE_MEM;
+                        end else begin 
+                            str_type <= STR_TYPE_PERIPH;
+                        end
                     end
 
                     default: begin 
@@ -319,22 +333,40 @@ always @(posedge sys_clk_i) begin
                         cpu_state            <= CPU_FETCH;   
                     end
                     OP_STR: begin 
-                        if (reg_file_cen) begin // store reg data into mem
-                            reg_file_cen    <= 1'b0;
-                            data_o          <= reg_file_data;
-                            mem_req_o       <= 1'b1;
-                            mem_we_o        <= 1'b1;
-                            address_bus_reg <= {ir[OPERAND_A], ir[OPERAND_B]};
-                            cpu_state       <= CPU_EXECUTE;
-                        end else if (!mem_ack_i) begin // wait for ack
-                            cpu_state       <= CPU_EXECUTE;
+                        if (str_type == STR_TYPE_MEM) begin 
+                            if (reg_file_cen) begin // store reg data into mem
+                                reg_file_cen    <= 1'b0;
+                                data_o          <= reg_file_data;
+                                mem_req_o       <= 1'b1;
+                                mem_we_o        <= 1'b1;
+                                address_bus_reg <= {ir[OPERAND_A], ir[OPERAND_B]};
+                                cpu_state       <= CPU_EXECUTE;
+                            end else if (!mem_ack_i) begin // wait for ack
+                                cpu_state       <= CPU_EXECUTE;
+                            end else begin 
+                                for (int i=0; i<`MAX_INST_BYTES; i++) begin 
+                                    ir[i]       <= `DATA_LEN'h00; 
+                                end 
+                                mem_req_o       <= 1'b0;
+                                mem_we_o        <= 1'b0;
+                                cpu_state       <= CPU_FETCH;
+                            end
                         end else begin 
-                            for (int i=0; i<`MAX_INST_BYTES; i++) begin 
-                                ir[i]       <= `DATA_LEN'h00; 
-                            end 
-                            mem_req_o       <= 1'b0;
-                            mem_we_o        <= 1'b0;
-                            cpu_state       <= CPU_FETCH;
+                            if (reg_file_cen) begin // store reg data into mem
+                                reg_file_cen    <= 1'b0;
+                                data_o          <= reg_file_data;
+                                periph_req_o    <= 1'b1;
+                                address_bus_reg <= {ir[OPERAND_A], ir[OPERAND_B]};
+                                cpu_state       <= CPU_EXECUTE;
+                            end else if (!periph_ack_i) begin // wait for ack
+                                cpu_state       <= CPU_EXECUTE;
+                            end else begin 
+                                for (int i=0; i<`MAX_INST_BYTES; i++) begin 
+                                    ir[i]       <= `DATA_LEN'h00; 
+                                end 
+                                periph_req_o    <= 1'b0;
+                                cpu_state       <= CPU_FETCH;
+                            end                            
                         end
                     end
 

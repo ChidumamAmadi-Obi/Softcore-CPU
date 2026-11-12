@@ -20,6 +20,10 @@ wire                  req, ack, err_ack;
 wire                  mem_we_io;
 wire                  mem_valid;
 
+/* peripheral control
+*/
+wire periph_req, periph_ack, periph_err_ack;
+
 assign mem_data_bus_wen = (!mem_we_io && (address_bus_io[`ADDR_LEN-1:10] == MEM_CEN));
 assign data_bus_io      = mem_data_bus_wen ? mem_data_o : `DATA_LEN'bz;
 
@@ -37,11 +41,12 @@ cpu cpu_io(
     .sys_clk_i(sys_clk_i),
     .sys_rstn_i(sys_rstn_i),
     .mem_ack_i(ack),
+    .periph_ack_i(periph_ack),
     .data_bus_io(data_bus_io),
     .address_bus_o(address_bus_io),
     .mem_we_o(mem_we_io),
-    .mem_req_o(req)
-);
+    .mem_req_o(req),
+    .periph_req_o(periph_req));
 memory memory_io (
     .sys_clk_i(sys_clk_i),
     .sys_rstn_i(sys_rstn_i),
@@ -56,9 +61,12 @@ memory memory_io (
 periphs periphs_o (
     .sys_clk_i(sys_clk_i),
     .sys_rstn_i(sys_rstn_i),
+    .req_i(periph_req),
     .address_bus_i(address_bus_io),
     .data_i(data_bus_io),
     .led_arr_o(led_arr_o),
     .port_0_o(output_port_o[7:0]),
-    .port_1_o(output_port_o[15:8]));
+    .port_1_o(output_port_o[15:8]),
+    .ack_o(periph_ack),
+    .err_ack_o(periph_err_ack));
 endmodule

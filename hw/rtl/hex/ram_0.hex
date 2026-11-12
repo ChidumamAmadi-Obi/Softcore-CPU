@@ -13,5 +13,8 @@
 
 // END: ; 0x0014
 01 00 FE 01     //     STR 0x00FE r1; store result in RAM location 0x00FE
-// 01 04 00 01     //     STR 0x0400 r1; store result in location 0x0400 (onboard LED peripheral)
+01 04 00 01     //     STR 0x0400 r1; store result in location 0x0400 (onboard LED peripheral)
 00           //     HALT; end program
+
+
+
