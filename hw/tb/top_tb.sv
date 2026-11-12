@@ -3,7 +3,7 @@
 
 `define FETCH_TEST_NO 250
 
-localparam MAX_SIM_TIME = 1_000_000;  
+localparam MAX_SIM_TIME = 5_000_000;  
 
 module top_tb;
 
@@ -15,6 +15,7 @@ logic [`OUT_PORT_LEN-1:0] output_port;
 logic [`DATA_LEN-1:0] inst [`MAX_INST_BYTES-1:0];
 
 int fetch_errors=0;
+int test_program_errors=0;
 
 top top_dut(
     .sys_clk_i(clk),
@@ -124,6 +125,89 @@ task testCpuFetch; // fetch first instruction and compare with expected instruct
                 fetch_errors++;    
         end        
     end
+    #(10);
+endtask
+
+task runProgram;
+    wait (rstn);
+    while (top_dut.cpu_io.sr[RUN_BIT]) #1;
+    #(10);
+endtask
+task loadTestProgram;
+input string prog;
+    $readmemh(`TEST_RAM_0_FILE_PATH(prog), top_dut.memory_io.ram_0);
+    $readmemh(`TEST_RAM_1_FILE_PATH(prog), top_dut.memory_io.ram_1);
+    $readmemh(`TEST_RAM_2_FILE_PATH(prog), top_dut.memory_io.ram_2);
+    $readmemh(`TEST_RAM_3_FILE_PATH(prog), top_dut.memory_io.ram_3);
+endtask
+task runTestProgram;
+    input string prog;
+    rst;
+    loadTestProgram(prog);
+    runProgram;
+
+    case(prog) // check memory and outputs for correct data
+        "factorial": begin 
+            /*
+            * EXPECTED:
+            * !5 = 0x78 in reg1 
+            * led_arr_o = 0x07
+            */
+            if (top_dut.cpu_io.reg_file_io.register[1] != 8'h78 ||
+                led_array != 6'h07 || 
+                top_dut.memory_io.ram_0[8'hFE] != 8'h78) begin 
+
+                $display("\033[33m PRGM [%s] OUTPUT MISMATCH \033[0m", prog);
+                $display("\033[33m      EXPECTED reg[1] = 0x%02h, ACTUAL reg[1] = 0x%02h \033[0m",
+                    8'h78, top_dut.cpu_io.reg_file_io.register[1]);
+                $display("\033[33m      EXPECTED led_arr_o = 0x%02h, ACTUAL led_arr_o = 0x%02h \033[0m",
+                    6'h07, led_array);
+                $display("\033[33m      EXPECTED ram_0[0xFE] = 0x%02h, ACTUAL ram_0[0xFE] = 0x%02h \033[0m",
+                    8'h78, top_dut.memory_io.ram_0[8'hFE]);
+                test_program_errors++;
+
+            end            
+        end
+        "fibbonacci": begin 
+            /*
+            * EXPECTED:
+            * fib(8) = 0x15
+            * reg[0] = 0x0D
+            * reg[1] = 0x15
+            * reg[2] = 0x00
+            * reg[3] = 0x15
+            * output_port_o = 0x1515
+            * ram_1[0x0E] = 0x15
+            */
+            if (top_dut.cpu_io.reg_file_io.register[0] != 8'h0D ||
+                top_dut.cpu_io.reg_file_io.register[1] != 8'h15 ||
+                top_dut.cpu_io.reg_file_io.register[2] != 8'h00 ||
+                top_dut.cpu_io.reg_file_io.register[3] != 8'h15 ||
+                output_port != 16'h1515 ||
+                top_dut.memory_io.ram_1[8'h0E] != 8'h15) begin 
+
+                $display("\033[33m PRGM [%s] OUTPUT MISMATCH \033[0m", prog);
+                $display("\033[33m      EXPECTED reg[0] = 0x%02h, ACTUAL reg[0] = 0x%02h \033[0m",
+                    8'h0D, top_dut.cpu_io.reg_file_io.register[0]);
+                $display("\033[33m      EXPECTED reg[1] = 0x%02h, ACTUAL reg[1] = 0x%02h \033[0m",
+                    8'h15, top_dut.cpu_io.reg_file_io.register[0]);
+                $display("\033[33m      EXPECTED reg[2] = 0x%02h, ACTUAL reg[2] = 0x%02h \033[0m",
+                    8'h00, top_dut.cpu_io.reg_file_io.register[0]);
+                $display("\033[33m      EXPECTED reg[3] = 0x%02h, ACTUAL reg[3] = 0x%02h \033[0m",
+                    8'h15, top_dut.cpu_io.reg_file_io.register[0]);
+
+                $display("\033[33m      EXPECTED output_port = 0x%04h, ACTUAL output_port = 0x%04h \033[0m",
+                    16'h1515, output_port);
+
+                $display("\033[33m      EXPECTED ram_1[0x0E] = 0x%02h, ACTUAL ram_1[0x0E] = 0x%02h \033[0m",
+                    8'h15, top_dut.memory_io.ram_0[8'h0E]);
+
+                test_program_errors++;
+
+            end                   
+        end
+        default: $display("INVALID TEST PROGAM...");
+    endcase
 endtask
 
 always #1 clk = ~clk;
@@ -135,23 +219,28 @@ initial begin
         top_dut.cpu_io.pc,
         top_dut.cpu_io.sr,
         top_dut.cpu_io.sr[RUN_BIT]);
+    test_program_errors++;
+    passFail("TOP", fetch_errors+test_program_errors);
     $finish;
 end
 
 initial begin 
     init;
-    // testCpuFetch;
-    // rst;
+    `ifdef SYS_TEST // runs test programs and checks for errors
+        testCpuFetch;
+        runTestProgram("factorial");
+        runTestProgram("fibbonacci");
 
-    wait (rstn);
-    while (top_dut.cpu_io.sr[RUN_BIT]) #1;
-    #(10);
-
-    if (fetch_errors) begin 
-        $display("\033[31mFAILED FETCH TESTS: %0d/%0d\033[0m", fetch_errors,`FETCH_TEST_NO);
-    end 
-
-    passFail("TOP", fetch_errors);
+        if (fetch_errors) begin 
+            $display("\033[31mFAILED FETCH TESTS: %0d/%0d\033[0m", fetch_errors,`FETCH_TEST_NO);
+        end 
+        if (test_program_errors) begin 
+            $display("\033[31mFAILED PROGRAM %0d TESTS\033[0m", test_program_errors);
+        end
+    `else
+        runProgram; // runs program in rtl/hex
+    `endif  
+    passFail("TOP", fetch_errors+test_program_errors);
     $finish;
 end
 endmodule

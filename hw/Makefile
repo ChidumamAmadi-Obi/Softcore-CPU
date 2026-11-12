@@ -5,8 +5,9 @@ PROJ ?= top
 RTL_DISABLE_WARNING ?= -Wno-WIDTHEXPAND -Wno-WIDTHTRUNC
 TB_DISABLE_WARNING ?=  $(RTL_DISABLE_WARNING)
 
-# specify test bench flags
+# specify flags
 TB_FLAGS = --binary --timing --assert --trace 
+DEFINE ?= 
 
 # specify log file for tbs if needed
 LOG_DIR = logs
@@ -39,6 +40,9 @@ help: # shows message
 	@echo  - clean
 	@echo  - help
 
+	@echo EXAMPLE:
+	@echo run-tb PROJ=top DEFINE=-DSYS_TEST
+
 -h:
 	make help
 
@@ -46,7 +50,7 @@ lint: # lint rtl modules
 	verilator --lint-only -I$(RTL_DIR) $(RTL_DISABLE_WARNING) $(RTL_DIR)/$(RTL_SRC).sv --top $(RTL_SRC)
 
 run-tb: # run tbs
-	verilator $(TB_FLAGS) -I$(RTL_DIR) -I$(TB_DIR) $(TB_DISABLE_WARNING) $(RTL_DIR)/$(RTL_SRC).sv $(TB_DIR)/$(TB_SRC).sv --top $(TB_SRC)
+	verilator $(TB_FLAGS) $(DEFINE) -I$(RTL_DIR) -I$(TB_DIR) $(TB_DISABLE_WARNING) $(RTL_DIR)/$(RTL_SRC).sv $(TB_DIR)/$(TB_SRC).sv --top $(TB_SRC)
 	$(TB_EXEC) | tee $(LOG_DIR)/$(LOG_FILE).txt
 
 run-regression:

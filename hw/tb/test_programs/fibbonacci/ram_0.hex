@@ -1,0 +1,26 @@
+/**
+* compute fib(8)
+**/
+
+11 00 00    // LI r0 0;
+11 01 01    // LI r1 1; 
+11 02 07    // LI r2 7; loop count (0-7 is 8 loops)
+11 03 00    // LI r3 0; result
+
+// LOOP: ; 0x000C
+09 03 00 01 // ADD r3 r0 r1
+04 00 01    // MOV r0 r1
+04 01 03    // MOV r1 r3
+13 02 02 01 // SUBI r2 r2 1      decriment counter
+06 00 20    // JMP_ZRO END       if result is zero, jump to FINISH
+03 00 0C    // JMP LOOP          jump to LOOP
+
+// END: ; 0x0020
+01 01 0E 03  // STR 0x010E r3       store result in RAM location 0x010E
+01 04 01 03  // STR 0x0401 r3       store result in location 0x0401 (output_port[15:8])
+01 04 02 03  // STR 0x0402 r3       store result in location 0x0402 (output_port[7:0])
+1C           // NOP
+00           // HALT
+
+
+

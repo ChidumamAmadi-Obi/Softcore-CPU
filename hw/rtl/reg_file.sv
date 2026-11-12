@@ -9,7 +9,7 @@ module reg_file(
     input logic               cen_i,
     input logic [3:0]         reg_address_i,
 
-    inout tri [`DATA_LEN-1:0] data_io);
+    inout logic [`DATA_LEN-1:0] data_io);
 
 logic [`DATA_LEN-1:0] register [`GP_REGS-1:0];
 wire  [`DATA_LEN-1:0] register_out;
