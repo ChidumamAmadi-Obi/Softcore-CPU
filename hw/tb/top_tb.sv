@@ -3,6 +3,8 @@
 
 `define FETCH_TEST_NO 250
 
+localparam MAX_SIM_TIME = 1_000_000;  
+
 module top_tb;
 
 logic clk = 0;
@@ -125,11 +127,25 @@ task testCpuFetch; // fetch first instruction and compare with expected instruct
 endtask
 
 always #1 clk = ~clk;
+
+initial begin 
+    wait ($time == MAX_SIM_TIME);
+    $display("\033[33m[TIMEOUT] SIM EXEEDED %0d TIME UNITS...\033[0m", MAX_SIM_TIME);
+    $display ("\033[33mPC: 0x%X SR: %b RUN_BIT: %d\033[0m", 
+        top_dut.cpu_io.pc,
+        top_dut.cpu_io.sr,
+        top_dut.cpu_io.sr[RUN_BIT]);
+    $finish;
+end
+
 initial begin 
     init;
-    //testCpuFetch;
+    // testCpuFetch;
+    // rst;
 
-    #(1000);
+    wait (rstn);
+    while (top_dut.cpu_io.sr[RUN_BIT]) #1;
+    #(10);
 
     if (fetch_errors) begin 
         $display("\033[31mFAILED FETCH TESTS: %0d/%0d\033[0m", fetch_errors,`FETCH_TEST_NO);

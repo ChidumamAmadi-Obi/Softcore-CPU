@@ -33,12 +33,9 @@
 `define ALU_LATENCY 2 // alu takes 2 clk cycles to execute
 
 parameter MAX_FULL_RES = `FULL_RESULT_LEN'h00FF;
-parameter MAX_OPERAND = `DATA_LEN'hFF;
-parameter MIN_OPERAND = `DATA_LEN'h00;
+parameter MAX_OPERAND  = `DATA_LEN'hFF;
+parameter MIN_OPERAND  = `DATA_LEN'h00;
 parameter MAX_ADDR_MEM = `ADDR_LEN'h0400;
-
-parameter MEM_CEN = 6'h00;
-parameter PERIPH_CEN = 6'h01;
 
 // status register bits
 parameter RUN_BIT = 7;
@@ -54,6 +51,11 @@ parameter OPERAND_A = 1;
 parameter OPERAND_B = 2;
 parameter OPERAND_C = 3;
 
+parameter MEM_CEN = 6'h00;
+parameter PERIPH_CEN = 6'h01;
+
+parameter STR_TYPE_MEM    = 1'b0;
+parameter STR_TYPE_PERIPH = 1'b1;
 // addresses for memory mapped peripherals
 typedef enum logic [15:0] { 
     LED_ARRAY  = 16'h0400,

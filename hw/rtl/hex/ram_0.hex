@@ -1,21 +1,17 @@
-// test alu
+/**
+* COMPUTE !5 = 120 or 0x78
+**/
 
-11 00 03 // LI R0 0x03
-11 07 01 // LI R7 0x01
+11 00 05     // LI r0 5; calculate 5!
+11 01 01     // LI r1 1; temp
 
-0A 05 06 07 // SUB 05 06 07 = 0xFF
+// LOOP: ; 0x0006
+0B 01 01 00  //     MUL r1 r1 r0; multiply contents of r1 by r0
+13 00 00 01  //     SUBI r0 r0 1; decriment contents of r0
+06 00 14     //     JMP_ZRO END; if result is zero, end program
+03 00 06     //     JMP LOOP; jump to LOOP
 
-12 01 00 09 // ADDI R1 R0 0x07 = 0x0C
-13 01 00 04 // SUBI R1 R0 0x04 = 0xFF
-14 01 00 04 // MULI R1 R0 0x04 = 0x0C
-19 01 00 03 // DIVI R1 R0 0x03 = 0x01
-
-15 01 00 02 // ANDI R1 R0 0x02 = 0x02 
-16 01 00 03 // ORI  R1 R0 0x03 = 0x03
-17 01 00 03 // XORI R1 R0 0x03 = 0x00
-18 01 00 03 // EQUI R1 R0 0x03 = 0x01
-
-01 00 04 00 // STR 0x0400 R1
-01 00 FF 01 // STR 0x00FF R1
-00 // HALT
-
+// END: ; 0x0014
+01 00 FE 01     //     STR 0x00FE r1; store result in RAM location 0x00FE
+// 01 04 00 01     //     STR 0x0400 r1; store result in location 0x0400 (onboard LED peripheral)
+00           //     HALT; end program
