@@ -1,0 +1,13 @@
+/**
+* CALL and RET test
+* 0xF2 = 20  (10 doubled by subroutine)
+**/
+
+11 00 0A        // LI r0 10
+1A 00 0B        // CALL DOUBLE
+01 00 00 00     // STR 0x00F2 r0
+00              
+
+double:
+09 00 00 00     // ADD r0 r0 r0  (r0 = r0 * 2)
+1B              // RET

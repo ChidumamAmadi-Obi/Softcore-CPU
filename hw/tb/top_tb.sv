@@ -1,10 +1,6 @@
 `include "constants.svh"
 `include "utils_tb.svh"
 
-`define SYS_CLK_FREQ_MHZ 27.0
-
-`define FETCH_TEST_NO 250
-
 localparam MAX_SIM_TIME = 5_000_000;  
 
 module top_tb;
@@ -268,6 +264,14 @@ initial begin
     `else // runs program in rtl/hex
         runProgram; 
     `endif  
+
+    `ifdef HEX_DUMP
+        $writememh(`HEX_DUMP_RAM_0_FILE_PATH, top_dut.memory_io.ram_0);
+        $writememh(`HEX_DUMP_RAM_1_FILE_PATH, top_dut.memory_io.ram_1);
+        $writememh(`HEX_DUMP_RAM_2_FILE_PATH, top_dut.memory_io.ram_2);
+        $writememh(`HEX_DUMP_RAM_3_FILE_PATH, top_dut.memory_io.ram_3);
+        $writememh(`HEX_DUMP_REG_FILE_PATH, top_dut.cpu_io.reg_file_io.register);
+    `endif
 
     `ifdef METRICS
         cpi = real'(cycles)/real'(instructions_executed);

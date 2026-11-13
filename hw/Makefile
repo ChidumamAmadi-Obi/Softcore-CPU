@@ -52,13 +52,22 @@ run-tb: # run tbs
 	$(TB_EXEC) | tee $(LOG_DIR)/$(LOG_FILE).txt
 
 run-sim: # simulate cpu running program in rtl/hex with metrics
+	make clean-obj
 	make run-tb PROJ=top DEFINE="-DSIM -DMETRICS"
 
 run-regression:
 	./regression.sh | tee $(LOG_DIR)/regression.txt
 
+clean-hex:
+	rm tb/hex_dump/*
+
 clean-logs:
 	rm $(LOG_DIR)/*
 
-clean: # remove generated stuff
+clean-obj: # remove generated stuff
 	rm $(OBJ_DIR)/*
+
+clean-all:
+	make clean-hex
+	make clean-obj
+	make clean-logs

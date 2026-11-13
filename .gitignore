@@ -2,6 +2,7 @@
 obj_dir/
 hw/wave/*
 hw/logs/*
+hw/tb/hex_dump/*
 *.vvp
 *.fs
 *.json

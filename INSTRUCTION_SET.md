@@ -19,7 +19,7 @@
 | XOR | 0x0E | `XOR rd rs1 rs2` | Logically XOR two registers |
 | EQU | 0x0F | `EQU rd rs1 rs2` | Compare two registers |
 | DIV | 0x10 | `DIV rd rs1 rs2` | Divide rs1 by rs2 |
-| LI | 0x11 |`LD rd val` | Load immediate value |
+| LI | 0x11 |`LI rd val` | Load immediate value |
 | ADDI | 0x12 | `ADDI rd rs1 val` | Add register with immediate value |
 | SUBI | 0x13 | `SUBI rd rs1 val` | Subtract immediate value from register |
 | MULI | 0x14 | `MULI rd rs1 val` | Multiply register with immediate value |
