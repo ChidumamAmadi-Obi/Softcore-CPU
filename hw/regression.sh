@@ -14,8 +14,6 @@ CURRENT_DATA_TIME=`date +"%d-%m-%Y %T"`
 
 MODULES=(
     "alu"
-    # "control_unit"
-    #"cpu"
     "memory"
     "reg_file"
     "top")

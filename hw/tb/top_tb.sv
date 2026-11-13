@@ -1,6 +1,8 @@
 `include "constants.svh"
 `include "utils_tb.svh"
 
+`define SYS_CLK_FREQ_MHZ 27.0
+
 `define FETCH_TEST_NO 250
 
 localparam MAX_SIM_TIME = 5_000_000;  
@@ -16,6 +18,14 @@ logic [`DATA_LEN-1:0] inst [`MAX_INST_BYTES-1:0];
 
 int fetch_errors=0;
 int test_program_errors=0;
+
+// cpu metrics
+real cpi, ipc;
+real cpu_time_s, cpu_time_ms, cpu_time_us;
+int cycles, instructions_executed;
+int count_cycles=0;
+int count_instructions=0;
+
 
 top top_dut(
     .sys_clk_i(clk),
@@ -130,7 +140,11 @@ endtask
 
 task runProgram;
     wait (rstn);
+    count_cycles=1;
+    count_instructions=1;
     while (top_dut.cpu_io.sr[RUN_BIT]) #1;
+    count_instructions=1;
+    count_cycles=0;
     #(10);
 endtask
 task loadTestProgram;
@@ -212,6 +226,20 @@ endtask
 
 always #1 clk = ~clk;
 
+always @* begin
+    while (count_cycles) begin 
+        @(posedge clk);
+        cycles++;
+    end
+end
+always @* begin 
+    while (count_instructions) begin 
+        @(top_dut.cpu_io.cpu_state == CPU_FETCH);
+        @(top_dut.cpu_io.cpu_state != CPU_FETCH);
+        instructions_executed++;            
+    end
+end
+
 initial begin 
     wait ($time == MAX_SIM_TIME);
     $display("\033[33m[TIMEOUT] SIM EXEEDED %0d TIME UNITS...\033[0m", MAX_SIM_TIME);
@@ -226,7 +254,7 @@ end
 
 initial begin 
     init;
-    `ifdef SYS_TEST // runs test programs and checks for errors
+    `ifndef SIM // runs test programs and checks for errors
         testCpuFetch;
         runTestProgram("factorial");
         runTestProgram("fibbonacci");
@@ -237,9 +265,27 @@ initial begin
         if (test_program_errors) begin 
             $display("\033[31mFAILED PROGRAM %0d TESTS\033[0m", test_program_errors);
         end
-    `else
-        runProgram; // runs program in rtl/hex
+    `else // runs program in rtl/hex
+        runProgram; 
     `endif  
+
+    `ifdef METRICS
+        cpi = real'(cycles)/real'(instructions_executed);
+        ipc = 1.0/cpi;
+        cpu_time_s = real'(cycles) / (`SYS_CLK_FREQ_MHZ * 1.0e6);
+        cpu_time_ms = real'(cycles) / (`SYS_CLK_FREQ_MHZ * 1000.0);
+        cpu_time_us = real'(cycles) / `SYS_CLK_FREQ_MHZ;
+        $display("\033[36m SYS CLK FREQ: \033[0m %0dMHz", `SYS_CLK_FREQ_MHZ);
+        $display("\033[36m CPU CYCLES: \033[0m   %0d", cycles);
+        $display("\033[36m INST COUNT: \033[0m   %0d", instructions_executed);
+        $display("\033[36m CPI: \033[0m          %0.3f", cpi);
+        $display("\033[36m IPC: \033[0m          %0.3f", ipc);
+        $display("\033[36m CPU TIME: \033[0m     %0.3fus", cpu_time_us);
+        $display("                %0.6fms", cpu_time_ms);
+        $display("                %0.9fs", cpu_time_s);
+        if (!test_program_errors && (instructions_executed > 0)) $display("\033[32m  SIMULATION SUCCESSFUL \033[0m");
+    `endif
+    
     passFail("TOP", fetch_errors+test_program_errors);
     $finish;
 end
