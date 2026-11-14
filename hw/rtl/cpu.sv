@@ -5,7 +5,8 @@ module cpu(
     input logic                  sys_rstn_i,
     input logic                  mem_ack_i,
     input logic                  periph_ack_i,
-    inout logic  [`DATA_LEN-1:0] data_bus_io,
+    input logic  [`DATA_LEN-1:0] data_bus_i,
+    output logic [`DATA_LEN-1:0] data_bus_o,
     output logic [`ADDR_LEN-1:0] address_bus_o,
     output logic                 mem_we_o,
     output logic                 mem_req_o,
@@ -15,7 +16,7 @@ logic [`DATA_LEN-1:0] ir [`MAX_INST_BYTES-1:0];
 logic [`ADDR_LEN-1:0] pc, ninst;
 logic [7:0]           sr; // status register
 logic [`ADDR_LEN-1:0] address_bus_reg;
-logic [`DATA_LEN-1:0] data_o;
+logic [`DATA_LEN-1:0] data_bus_o_reg;
 logic                 str_type;
 
 // fetch signals
@@ -25,8 +26,8 @@ logic [3:0] inst_byte_cnt, inst_byte_no;
 // regfile signals
 logic [3:0]           reg_file_address;
 logic                 reg_file_cen, reg_file_we;
-logic [`DATA_LEN-1:0] reg_file_data_buffer;
-wire  [`DATA_LEN-1:0] reg_file_data;
+logic [`DATA_LEN-1:0] reg_file_data_in;
+logic [`DATA_LEN-1:0] reg_file_data_out;
 
 // alu signals
 logic [`DATA_LEN-1:0] alu_operand_a, alu_operand_b, alu_result;
@@ -39,13 +40,9 @@ fetch_states          fetch_state;
 cpu_states            cpu_state;
 alu_execute_states    alu_execute_state;
 
-
-
 // cpu bus control
 assign address_bus_o = address_bus_reg; 
-assign data_bus_io   = mem_we_o || (str_type == STR_TYPE_PERIPH) ? data_o : `DATA_LEN'bz;
-
-assign reg_file_data = reg_file_we ? reg_file_data_buffer : `DATA_LEN'bz;
+assign data_bus_o    = mem_we_o || (str_type == STR_TYPE_PERIPH) ? data_bus_o_reg : `DATA_LEN'hzz;
 
 // cpu state machine 3 stages
 always @(posedge sys_clk_i) begin 
@@ -57,7 +54,7 @@ always @(posedge sys_clk_i) begin
         pc               <= `ADDR_LEN'h0;
         ninst            <= `ADDR_LEN'h0;
         address_bus_reg  <= `ADDR_LEN'h0;
-        data_o           <= `DATA_LEN'h00;
+        data_bus_o_reg   <= `DATA_LEN'h0;
         sr               <= 8'h80; // start with RUN_BIT set
         mem_we_o         <= 1'b0;
         mem_req_o        <= 1'b0;       
@@ -68,7 +65,7 @@ always @(posedge sys_clk_i) begin
         reg_file_cen     <= 1'b0;
         reg_file_we      <= 1'b0;
         reg_file_address <= 4'H0;
-        reg_file_data_buffer  <= `DATA_LEN'h00;
+        reg_file_data_in  <= `DATA_LEN'h00;
 
         alu_operand_a    <= `DATA_LEN'h00;
         alu_operand_b    <= `DATA_LEN'h00;
@@ -89,8 +86,8 @@ always @(posedge sys_clk_i) begin
                         reg_file_cen     <= 1'b0;
                         reg_file_we      <= 1'b0;
                         reg_file_address <= 4'H0;
-                        reg_file_data_buffer  <= `DATA_LEN'h00;
-                        data_o           <= `DATA_LEN'h00;
+                        reg_file_data_in <= `DATA_LEN'h0;
+                        data_bus_o_reg   <= `DATA_LEN'h0;
 
                         inst_byte_cnt    <= 4'h0;
                         inst_byte_en     <= 1'b0;
@@ -137,7 +134,7 @@ always @(posedge sys_clk_i) begin
                         if (mem_ack_i) begin 
                             mem_req_o     <= 1'b0;
                             inst_byte_en  <= 1'b1;
-                            ir[OPCODE]         <= data_bus_io;
+                            ir[OPCODE]    <= data_bus_i;
                             inst_byte_cnt <= 4'h1;
                             pc            <= pc + 1;   
                             fetch_state   <= F_SEND_ADDR;                            
@@ -149,7 +146,7 @@ always @(posedge sys_clk_i) begin
                     F_GET_OPERANDS: begin 
                         if (mem_ack_i) begin 
                             mem_req_o         <= 1'b0;
-                            ir[inst_byte_cnt] <= data_bus_io;
+                            ir[inst_byte_cnt] <= data_bus_i;
                             inst_byte_cnt     <= inst_byte_cnt + 1;
                             pc                <= pc + 1;  
                             fetch_state       <= F_SEND_ADDR;                            
@@ -194,7 +191,7 @@ always @(posedge sys_clk_i) begin
 
                     OP_LDI: begin 
                         reg_file_address     <= ir[OPERAND_A];
-                        reg_file_data_buffer <= ir[OPERAND_B];
+                        reg_file_data_in <= ir[OPERAND_B];
                         reg_file_cen         <= 1'b1;
                         reg_file_we          <= 1'b1;
                         cpu_state            <= CPU_EXECUTE; 
@@ -316,7 +313,7 @@ always @(posedge sys_clk_i) begin
                             end 
                             mem_req_o            <= 1'b0;
                             reg_file_address     <= ir[OPERAND_A];
-                            reg_file_data_buffer <= data_bus_io;
+                            reg_file_data_in     <= data_bus_i;
                             reg_file_cen         <= 1'b1;
                             reg_file_we          <= 1'b1;
                             cpu_state            <= CPU_FETCH;
@@ -328,45 +325,35 @@ always @(posedge sys_clk_i) begin
                         end 
                         reg_file_we          <= 1'b1;
                         reg_file_address     <= ir[OPERAND_A];
-                        reg_file_data_buffer <= reg_file_data;
+                        reg_file_data_in     <= reg_file_data_out;
                         
                         cpu_state            <= CPU_FETCH;   
                     end
-                    OP_STR: begin 
-                        if (str_type == STR_TYPE_MEM) begin 
-                            if (reg_file_cen) begin // store reg data into mem
-                                reg_file_cen    <= 1'b0;
-                                data_o          <= reg_file_data;
-                                mem_req_o       <= 1'b1;
-                                mem_we_o        <= 1'b1;
-                                address_bus_reg <= {ir[OPERAND_A], ir[OPERAND_B]};
-                                cpu_state       <= CPU_EXECUTE;
-                            end else if (!mem_ack_i) begin // wait for ack
-                                cpu_state       <= CPU_EXECUTE;
+                    OP_STR: begin
+                        if (reg_file_cen) begin // store reg data into mem
+                            reg_file_cen    <= 1'b0;
+                            data_bus_o_reg  <= reg_file_data_out;
+                            mem_req_o       <= 1'b1;
+                            mem_we_o        <= 1'b1;
+                            address_bus_reg <= {ir[OPERAND_A], ir[OPERAND_B]};
+                            cpu_state       <= CPU_EXECUTE;
+
+                            if (str_type == STR_TYPE_MEM) begin // toggle proper control bits
+                                mem_req_o   <= 1'b1;
+                                mem_we_o    <= 1'b1;
                             end else begin 
-                                for (int i=0; i<`MAX_INST_BYTES; i++) begin 
-                                    ir[i]       <= `DATA_LEN'h00; 
-                                end 
-                                mem_req_o       <= 1'b0;
-                                mem_we_o        <= 1'b0;
-                                cpu_state       <= CPU_FETCH;
+                                periph_req_o<= 1'b1;
                             end
+                        end else if ((str_type == STR_TYPE_MEM && !mem_ack_i) || (str_type == STR_TYPE_PERIPH && !periph_ack_i)) begin 
+                            cpu_state <= CPU_EXECUTE;
                         end else begin 
-                            if (reg_file_cen) begin // store reg data into mem
-                                reg_file_cen    <= 1'b0;
-                                data_o          <= reg_file_data;
-                                periph_req_o    <= 1'b1;
-                                address_bus_reg <= {ir[OPERAND_A], ir[OPERAND_B]};
-                                cpu_state       <= CPU_EXECUTE;
-                            end else if (!periph_ack_i) begin // wait for ack
-                                cpu_state       <= CPU_EXECUTE;
-                            end else begin 
-                                for (int i=0; i<`MAX_INST_BYTES; i++) begin 
-                                    ir[i]       <= `DATA_LEN'h00; 
-                                end 
-                                periph_req_o    <= 1'b0;
-                                cpu_state       <= CPU_FETCH;
-                            end                            
+                            for (int i = 0; i < `MAX_INST_BYTES; i++) begin
+                                ir[i] <= `DATA_LEN'h00;
+                            end
+                            mem_req_o    <= 1'b0;
+                            mem_we_o     <= 1'b0;
+                            periph_req_o <= 1'b0;
+                            cpu_state    <= CPU_FETCH;
                         end
                     end
 
@@ -377,7 +364,7 @@ always @(posedge sys_clk_i) begin
                             ALU_EXEC_LOAD_FST_VAL: begin
                                 // here load src reg val and imm val into alu, then enable
                                 alu_cen              <= 1'b1;
-                                alu_operand_a        <= reg_file_data;
+                                alu_operand_a        <= reg_file_data_out;
                                 alu_operand_b        <= ir[OPERAND_C]; // operand b is last byte if inst
                                 alu_execute_state    <= ALU_EXEC_WAIT;
 
@@ -411,7 +398,7 @@ always @(posedge sys_clk_i) begin
                                 reg_file_cen         <= 1'b1;
                                 reg_file_address     <= ir[OPERAND_A];
                                 reg_file_we          <= 1'b1;
-                                reg_file_data_buffer <= alu_result;
+                                reg_file_data_in <= alu_result;
                                 sr[3:0]              <= alu_flags;
 
                                 alu_cen <= 1'b0;
@@ -432,7 +419,7 @@ always @(posedge sys_clk_i) begin
                             ALU_EXEC_IDLE: begin end
                             ALU_EXEC_LOAD_FST_VAL: begin
                                 // here load first reg val...
-                                alu_operand_a        <= reg_file_data;
+                                alu_operand_a        <= reg_file_data_out;
 
                                 reg_file_address     <= ir[OPERAND_C]; // load addr of next reg to get next operand
                                 alu_execute_state    <= ALU_EXEC_LOAD_SEC_VAL;
@@ -441,7 +428,7 @@ always @(posedge sys_clk_i) begin
                             ALU_EXEC_LOAD_SEC_VAL: begin
                                 // here load second reg val and enable alu
                                 alu_cen              <= 1'b1;
-                                alu_operand_b        <= reg_file_data;
+                                alu_operand_b        <= reg_file_data_out;
 
                                 reg_file_cen         <= 1'b0;
                                 reg_file_we          <= 1'b0;
@@ -474,7 +461,7 @@ always @(posedge sys_clk_i) begin
                                 reg_file_cen         <= 1'b1;
                                 reg_file_address     <= ir[OPERAND_A];
                                 reg_file_we          <= 1'b1;
-                                reg_file_data_buffer <= alu_result;
+                                reg_file_data_in <= alu_result;
                                 sr[3:0]              <= alu_flags;
                                 
                                 alu_cen <= 1'b0;
@@ -524,7 +511,8 @@ reg_file reg_file_io(
     .we_i(reg_file_we),
     .cen_i(reg_file_cen),
     .reg_address_i(reg_file_address),
-    .data_io(reg_file_data));
+    .reg_data_i(reg_file_data_in),
+    .reg_data_o(reg_file_data_out));
 alu alu_io(
     .sys_clk_i(sys_clk_i),
     .sys_rstn_i(sys_rstn_i),

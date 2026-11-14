@@ -1,7 +1,7 @@
 `include "constants.svh"
 `include "utils_tb.svh"
 
-localparam MAX_SIM_TIME = 5_000_000;  
+localparam MAX_SIM_TIME = 500_000;  
 
 module top_tb;
 
@@ -152,6 +152,7 @@ input string prog;
 endtask
 task runTestProgram;
     input string prog;
+    $display("[RUNNING '%s'...]", prog);
     rst;
     loadTestProgram(prog);
     runProgram;
@@ -176,7 +177,7 @@ task runTestProgram;
                     8'h78, top_dut.memory_io.ram_0[8'hFE]);
                 test_program_errors++;
 
-            end            
+                end else $display(" SUCCESSFUL");      
         end
         "fibbonacci": begin 
             /*
@@ -214,7 +215,7 @@ task runTestProgram;
 
                 test_program_errors++;
 
-            end                   
+            end else $display(" SUCCESSFUL");                  
         end
         default: $display("INVALID TEST PROGAM...");
     endcase

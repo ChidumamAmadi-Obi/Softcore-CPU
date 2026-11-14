@@ -2,7 +2,7 @@
 FILE_LIST = rtl_files
 TOP_MODULE = top
 JSON_FILE = Softcore-CPU
-YOSYS_FLAGS ?=
+YOSYS_FLAGS ?= -q
 
 help: # shows msg
 	@echo MAKEFILE TARGETS

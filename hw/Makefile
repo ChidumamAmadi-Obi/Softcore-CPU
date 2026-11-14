@@ -38,7 +38,11 @@ help: # shows message
 	@echo  - run-tb PROJ=module_name
 	@echo  - run-regression
 	@echo  - run-sim
-	@echo  - clean
+
+	@echo  - clean-hex
+	@echo  - clean-obj
+	@echo  - clean-all
+	
 	@echo  - help
 
 -h:

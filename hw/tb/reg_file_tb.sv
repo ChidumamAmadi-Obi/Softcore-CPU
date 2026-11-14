@@ -11,7 +11,7 @@ logic rstn = 0;
 logic we = 0;
 logic cen = 0;
 logic [3:0] reg_address = 4'h0;
-wire [`DATA_LEN-1:0] data_inout;
+logic [`DATA_LEN-1:0] data_in, data_out;
 
 int init_errors = 0;
 int rw_errors = 0;
@@ -19,17 +19,14 @@ int rw_errors = 0;
 logic [`DATA_LEN-1:0] read_data  = `DATA_LEN'h0;
 logic [`DATA_LEN-1:0] write_data = `DATA_LEN'h0;
 
-logic [`DATA_LEN-1:0] tb_data_inout = `DATA_LEN'h0;
-logic tb_data_oe = 1'b0;
-assign data_inout = tb_data_oe ? tb_data_inout : `DATA_LEN'bz;
-
 reg_file reg_file_dut(
     .sys_clk_i(clk),
     .sys_rstn_i(rstn),
     .we_i(we),
     .cen_i(cen),
     .reg_address_i(reg_address),
-    .data_io(data_inout));
+    .data_i(data_in),
+    .data_o(data_out));
 
 task init;
     $dumpfile("tb/wave/reg_file.vcd");
@@ -46,13 +43,12 @@ output logic [`DATA_LEN-1:0] data_o;
     @(negedge clk);
     cen = 1'b1;
     we = 1'b0;    
-    tb_data_oe = 1'b0;    
     reg_address = address;
 
     @(posedge clk);
     #1;
 
-    data_o = data_inout;
+    data_o = data_out;
     cen = 1'b0;
 
     if (`PRINT) $display("READ FROM REG: %d: 0x%02H", address, data_o);
@@ -65,15 +61,13 @@ input logic [`DATA_LEN-1:0] data_i;
     @(negedge clk);
     cen = 1'b1;
     we = 1'b1;    
-    tb_data_oe = 1'b1;    
     reg_address = address;
-    tb_data_inout = data_i;    
+    data_in = data_i;    
     
     @(posedge clk);
     #1;
     
     cen = 1'b0;
-    tb_data_oe = 1'b0;  
 
     if (`PRINT) $display("WRITE TO REG: %d: 0x%02H", address, data_i);
 endtask

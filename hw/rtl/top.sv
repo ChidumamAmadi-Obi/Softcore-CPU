@@ -9,29 +9,31 @@ module top (
 
 /* buses
 */
+
 wire [`ADDR_LEN-1:0] address_bus_io;
-wire [`DATA_LEN-1:0] data_bus_io;
+wire [`DATA_LEN-1:0] data_bus_i;
+wire [`DATA_LEN-1:0] data_bus_o;
 
 /* memory control 
 */
 logic [`DATA_LEN-1:0] mem_data_i, mem_data_o;
 wire                  mem_data_bus_wen;
-wire                  req, ack, err_ack;
+wire                  mem_req, mem_ack, mem_err_ack;
 wire                  mem_we_io;
 wire                  mem_valid;
 
 /* peripheral control
 */
-wire periph_req, periph_ack, periph_err_ack;
+wire                  periph_req, periph_ack, periph_err_ack;
 
 assign mem_data_bus_wen = (!mem_we_io && (address_bus_io[`ADDR_LEN-1:10] == MEM_CEN));
-assign data_bus_io      = mem_data_bus_wen ? mem_data_o : `DATA_LEN'bz;
+assign data_bus_i      = mem_data_bus_wen ? mem_data_o : `DATA_LEN'hzz;
 
 always @(posedge sys_clk_i) begin 
     if (!sys_rstn_i || !mem_we_io) begin 
         mem_data_i <= `DATA_LEN'h0;
     end else begin 
-        mem_data_i <= data_bus_io;
+        mem_data_i <= data_bus_o;
     end
 end
 
@@ -40,30 +42,31 @@ end
 cpu cpu_io(
     .sys_clk_i(sys_clk_i),
     .sys_rstn_i(sys_rstn_i),
-    .mem_ack_i(ack),
+    .mem_ack_i(mem_ack),
     .periph_ack_i(periph_ack),
-    .data_bus_io(data_bus_io),
+    .data_bus_i(data_bus_i),
+    .data_bus_o(data_bus_o),
     .address_bus_o(address_bus_io),
     .mem_we_o(mem_we_io),
-    .mem_req_o(req),
+    .mem_req_o(mem_req),
     .periph_req_o(periph_req));
 memory memory_io (
     .sys_clk_i(sys_clk_i),
     .sys_rstn_i(sys_rstn_i),
-    .req_i(req),
+    .req_i(mem_req),
     .address_bus_i(address_bus_io),
     .we_i(mem_we_io),
     .data_i(mem_data_i),
     .data_o(mem_data_o),
-    .ack_o(ack),
-    .err_ack_o(err_ack),
+    .ack_o(mem_ack),
+    .err_ack_o(mem_err_ack),
     .valid_o(mem_valid));
 periphs periphs_o (
     .sys_clk_i(sys_clk_i),
     .sys_rstn_i(sys_rstn_i),
     .req_i(periph_req),
     .address_bus_i(address_bus_io),
-    .data_i(data_bus_io),
+    .data_i(data_bus_o),
     .led_arr_o(led_arr_o),
     .port_0_o(output_port_o[7:0]),
     .port_1_o(output_port_o[15:8]),

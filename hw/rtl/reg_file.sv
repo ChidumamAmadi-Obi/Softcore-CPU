@@ -9,10 +9,10 @@ module reg_file(
     input logic               cen_i,
     input logic [3:0]         reg_address_i,
 
-    inout logic [`DATA_LEN-1:0] data_io);
+    input logic  [`DATA_LEN-1:0] reg_data_i,
+    output logic [`DATA_LEN-1:0] reg_data_o);
 
 logic [`DATA_LEN-1:0] register [`GP_REGS-1:0];
-wire  [`DATA_LEN-1:0] register_out;
 
 initial begin 
     for (integer i=0; i<`GP_REGS; i++) begin 
@@ -26,11 +26,10 @@ always @(posedge sys_clk_i) begin
             register[i] <= `DATA_LEN'h0;
         end        
     end else if (we_i && cen_i) begin 
-        register[reg_address_i] <= data_io;
+        register[reg_address_i] <= reg_data_i; 
     end
 end
 
-assign register_out = !we_i ? register[reg_address_i] : `DATA_LEN'bz;
-assign data_io      = cen_i ? register_out            : `DATA_LEN'bz;
+assign reg_data_o = (cen_i && !we_i) ? register[reg_address_i] : `DATA_LEN'hzz;
 
 endmodule
