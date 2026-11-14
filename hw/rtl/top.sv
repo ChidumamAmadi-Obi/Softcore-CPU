@@ -4,12 +4,11 @@ module top (
     input logic                      sys_clk_i,
     input logic                      sys_rstn_i,
 
-    output logic [5:0]               led_arr_o,
+    output logic [4:0]               led_arr_o,
     output logic [`OUT_PORT_LEN-1:0] output_port_o);
 
 /* buses
 */
-
 wire [`ADDR_LEN-1:0] address_bus_io;
 wire [`DATA_LEN-1:0] data_bus_i;
 wire [`DATA_LEN-1:0] data_bus_o;

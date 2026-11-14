@@ -1,7 +1,7 @@
 
 FILE_LIST = rtl_files
 TOP_MODULE = top
-JSON_FILE = Softcore-CPU
+PROJ_NAME = Softcore-CPU
 YOSYS_FLAGS ?= -q
 
 help: # shows msg
@@ -13,4 +13,4 @@ help: # shows msg
 	make help
 
 synth: # parse sv and synthesize
-	yosys $(YOSYS_FLAGS) -m slang -p "read_slang -F $(FILE_LIST).f; synth_gowin -top $(TOP_MODULE) -json $(JSON_FILE).json"
+	yosys $(YOSYS_FLAGS) -m slang -p "read_slang -F $(FILE_LIST).f; synth_gowin -top $(TOP_MODULE) -json $(PROJ_NAME).json -nodffe"

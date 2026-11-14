@@ -275,23 +275,28 @@ initial begin
     `endif
 
     `ifdef METRICS
-        cpi = real'(cycles)/real'(instructions_executed);
-        ipc = 1.0/cpi;
-        cpu_time_s = real'(cycles) / (`SYS_CLK_FREQ_MHZ * 1.0e6);
-        cpu_time_ms = real'(cycles) / (`SYS_CLK_FREQ_MHZ * 1000.0);
-        cpu_time_us = real'(cycles) / `SYS_CLK_FREQ_MHZ;
-        $display("\033[36m SYS CLK FREQ: \033[0m %0dMHz", `SYS_CLK_FREQ_MHZ);
-        $display("\033[36m CPU CYCLES: \033[0m   %0d", cycles);
-        $display("\033[36m INST COUNT: \033[0m   %0d", instructions_executed);
-        $display("\033[36m CPI: \033[0m          %0.3f", cpi);
-        $display("\033[36m IPC: \033[0m          %0.3f", ipc);
-        $display("\033[36m CPU TIME: \033[0m     %0.3fus", cpu_time_us);
-        $display("                %0.6fms", cpu_time_ms);
-        $display("                %0.9fs", cpu_time_s);
-        if (!test_program_errors && (instructions_executed > 0)) $display("\033[32m  SIMULATION SUCCESSFUL \033[0m");
+        if (!(instructions_executed > 0)) begin 
+            $display("\033[31m  NO INSTRUCTIONS EXECUTED \033[0m");
+        end else begin 
+            cpi = real'(cycles)/real'(instructions_executed);
+            ipc = 1.0/cpi;
+            cpu_time_s = real'(cycles) / (`SYS_CLK_FREQ_MHZ * 1.0e6);
+            cpu_time_ms = real'(cycles) / (`SYS_CLK_FREQ_MHZ * 1000.0);
+            cpu_time_us = real'(cycles) / `SYS_CLK_FREQ_MHZ;
+            $display("\033[36m SYS CLK FREQ: \033[0m %0dMHz", `SYS_CLK_FREQ_MHZ);
+            $display("\033[36m CPU CYCLES: \033[0m   %0d", cycles);
+            $display("\033[36m INST COUNT: \033[0m   %0d", instructions_executed);
+            $display("\033[36m CPI: \033[0m          %0.3f", cpi);
+            $display("\033[36m IPC: \033[0m          %0.3f", ipc);
+            $display("\033[36m CPU TIME: \033[0m     %0.3fus", cpu_time_us);
+            $display("                %0.6fms", cpu_time_ms);
+            $display("                %0.9fs", cpu_time_s);
+            if (!test_program_errors) $display("\033[32m  SIMULATION SUCCESSFUL \033[0m");            
+        end
+
     `endif
     
-    passFail("TOP", fetch_errors+test_program_errors);
+    passFail("TOP", fetch_errors+test_program_errors + !(instructions_executed > 0));
     $finish;
 end
 endmodule

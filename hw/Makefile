@@ -53,13 +53,13 @@ lint: # lint rtl modules
 
 run-tb: # run tbs
 	verilator $(TB_FLAGS) $(DEFINE) -I$(RTL_DIR) -I$(TB_DIR) $(TB_DISABLE_WARNING) $(RTL_DIR)/$(RTL_SRC).sv $(TB_DIR)/$(TB_SRC).sv --top $(TB_SRC)
-	$(TB_EXEC) | tee $(LOG_DIR)/$(LOG_FILE).txt
+	$(TB_EXEC) | tee $(LOG_DIR)/$(LOG_FILE).log
 
 run-sim: # simulate cpu running program in rtl/hex with metrics
 	make run-tb PROJ=top DEFINE="-DSIM -DMETRICS"
 
 run-regression:
-	./regression.sh | tee $(LOG_DIR)/regression.txt
+	./regression.sh | tee $(LOG_DIR)/regression.log
 
 clean-hex:
 	rm tb/hex_dump/*

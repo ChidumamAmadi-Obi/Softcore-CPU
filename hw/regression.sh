@@ -22,10 +22,10 @@ MODULES=(
 for MODULE in "${MODULES[@]}"; do
     echo "[ RUNNING $MODULE TEST BENCH... ]" 
     make run-tb PROJ=$MODULE LOG_FILE=$MODULE
-    if grep -q 'TEST PASSED' "$LOG_DIR/$MODULE.txt"; then 
+    if grep -q 'TEST PASSED' "$LOG_DIR/$MODULE.log"; then 
         PASSED_TESTS+=("$MODULE")
         ((PASSED++))
-    elif grep -q 'TEST FAILED' "$LOG_DIR/$MODULE.txt"; then 
+    elif grep -q 'TEST FAILED' "$LOG_DIR/$MODULE.log"; then 
         FAILED_TESTS+=("$MODULE")
         ((FAILED++))
     else

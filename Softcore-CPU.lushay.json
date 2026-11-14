@@ -1,0 +1,9 @@
+{
+  "top": "top",
+  "synthGowinOptions": ["-nodffe"],
+  "constraintsFile": "hw/tangnano9k.cst",
+  "nextPnrGowinOptions": [
+    "--sdc", "hw/tangnano9k.sdc",
+    "-l", "hw/logs/nextpnr.log"
+  ]
+}

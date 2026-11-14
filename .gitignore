@@ -3,9 +3,10 @@ obj_dir/
 hw/wave/*
 hw/logs/*
 hw/tb/hex_dump/*
+Softcore-CPU_pnr.json
+Softcore-CPU.json
 *.vvp
 *.fs
-*.json
 *.txt
 *.vcd
 NOTES.md

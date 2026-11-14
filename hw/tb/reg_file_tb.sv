@@ -25,8 +25,8 @@ reg_file reg_file_dut(
     .we_i(we),
     .cen_i(cen),
     .reg_address_i(reg_address),
-    .data_i(data_in),
-    .data_o(data_out));
+    .reg_data_i(data_in),
+    .reg_data_o(data_out));
 
 task init;
     $dumpfile("tb/wave/reg_file.vcd");
