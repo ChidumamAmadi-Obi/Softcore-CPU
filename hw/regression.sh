@@ -1,4 +1,5 @@
 #!/bin/bash
+
 LOG_DIR="logs"
 
 PASSED=0
