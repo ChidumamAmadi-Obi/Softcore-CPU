@@ -8,5 +8,6 @@ Softcore-CPU.json
 *.vvp
 *.fs
 *.txt
+*.exe
 *.vcd
 NOTES.md

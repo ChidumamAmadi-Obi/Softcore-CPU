@@ -3,9 +3,10 @@ MACRO ?= -DSHOW_ERRORS -DHEX_ONLY
 
 PROJ ?= default_program
 
-ASM  ?= programs/$(PROJ)
-BIN  ?= bin/$(PROJ) # not used here, only for emulator
-HEX  ?= ../hw/tb/test_programs/$(PROJ)
+ASM_SRC  ?= programs/$(PROJ)
+BIN_SRC  ?= bin/$(PROJ) # not used here, only for emulator
+HEX_SRC  ?= ../hw/tb/test_programs/$(PROJ)
+# HEX_SRC  ?= ../hw/rtl/hex
 
 ASSEMBLER_DIR  = assembler
 ASSEMBLER_SRC  = $(wildcard $(ASSEMBLER_DIR)/src/*.cpp)
@@ -21,7 +22,8 @@ all: $(ASSEMBLER_EXEC)
 build: all
 
 run: $(ASSEMBLER_EXEC)
-	./$(ASSEMBLER_EXEC) $(BIN) $(HEX) $(ASM)
+	mkdir -p $(HEX_SRC)
+	./$(ASSEMBLER_EXEC) $(BIN_SRC) $(HEX_SRC) $(ASM_SRC)
 
 $(ASSEMBLER_EXEC): $(ASSEMBLER_SRC)
 	$(CXX) $(MACRO) $(ASSEMBLER_INC) -o $@ $(ASSEMBLER_SRC)

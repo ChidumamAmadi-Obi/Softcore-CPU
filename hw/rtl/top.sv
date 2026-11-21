@@ -1,11 +1,35 @@
 `include "constants.svh"
+/*
+module rst_gen(
+    input logic sys_clk_i,
+    output logic sys_rstn_o);
+logic [3:0] rst_counter;
+initial begin 
+    rst_counter = 4'h0;
+end
+always @(posedge sys_clk_i) begin 
+    if (rst_counter != 4'hF) begin 
+        rst_counter <= rst_counter + 1'b1;
+    end
+end
+assign sys_rstn_o = &rst_counter;
+
+    //&rst_counter == rst_counter[0] & 
+    //                rst_counter[1] & 
+    //                rst_counter[2] & 
+    //                rst_counter[3]
+
+endmodule
+*/
 
 module top (
     input logic                      sys_clk_i,
     input logic                      sys_rstn_i,
 
-    output logic [4:0]               led_arr_o,
+    output logic [5:0]               led_arr_o,
     output logic [`OUT_PORT_LEN-1:0] output_port_o);
+
+// logic sys_rstn;
 
 /* buses
 */
@@ -35,6 +59,8 @@ always @(posedge sys_clk_i) begin
         mem_data_i <= data_bus_o;
     end
 end
+
+// rst_gen rst_gen_o( .sys_clk_i(sys_clk_i), .sys_rstn_o(sys_rstn_i) );
 
 /* module connections
 */
